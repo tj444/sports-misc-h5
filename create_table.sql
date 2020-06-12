@@ -124,7 +124,7 @@ DROP TABLE IF EXISTS crawlerlog; CREATE TABLE crawlerlog (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `date` date NOT NULL,
     `sha256` char(64) NOT NULL,
-    `content` text NOT NULL,
+    `content` mediumtext NOT NULL,
     `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY `idx_date_sha256` (`date`, `sha256`)

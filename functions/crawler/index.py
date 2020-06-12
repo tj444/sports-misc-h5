@@ -9,18 +9,39 @@ import datetime
 logger = logging.getLogger()
 
 def handler(event, context):
-  url = 'https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&poolcode[]=hhad&poolcode[]=had&poolcode[]=crs&poolcode[]=ttg&poolcode[]=hafu'
-  req = requests.get(url)
-  resultText = req.text
-  h = hashlib.sha256()
-  h.update(resultText.encode())
-  sha256 = h.hexdigest()
-
-  today = datetime.date.today().isoformat()
-
   conn = db.getConnection()
 
   try:
+    today = datetime.date.today().isoformat()
+    startTime = None
+
+    # 检查是否在售卖时间，如果不在售卖时间，不必抓取
+    with conn.cursor() as cursor:
+      cursor.execute('SELECT `startTime`, `stopTime` FROM `saletime` WHERE `date` = %s', (today))
+      dbResult = cursor.fetchone()
+      if dbResult != None:
+        now = datetime.datetime.timestamp(datetime.datetime.now()) * 1000
+        logger.info(type(dbResult))
+        logger.info(dbResult)
+        startTime = dbResult['startTime']
+        stopTime = dbResult['stopTime']
+        if startTime > now or stopTime < now:
+          logger.info('Not on sale')
+          return 'Done'
+      else:
+        # 没有抓取到当天的售卖时间，不抓取赛事
+        logger.info('Not on sale')
+        return 'Done'
+
+    # 抓取赛事数据
+    url = 'https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&poolcode[]=hhad&poolcode[]=had&poolcode[]=crs&poolcode[]=ttg&poolcode[]=hafu'
+    req = requests.get(url)
+    resultText = req.text
+    h = hashlib.sha256()
+    h.update(resultText.encode())
+    sha256 = h.hexdigest()
+
+    # 赛事数据没有更新的话直接结束
     with conn.cursor() as cursor:
       cursor.execute('SELECT `id` FROM `crawlerlog` WHERE `date` = %s AND `sha256` = %s', (today, sha256))
       dbResult = cursor.fetchone()
@@ -34,6 +55,7 @@ def handler(event, context):
       for value in result['data'].values():
         matchId = value['id']
 
+        # 保存赛事基本数据
         row = dict()
         row['matchId'] = matchId
         row['league'] = value['l_cn']
@@ -41,6 +63,8 @@ def handler(event, context):
         row['visitingTeam'] = value['a_cn']
         row['matchPeriod'] = value['b_date']
         row['number'] = value['num']
+        row['startTime'] = startTime
+        row['stopTime'] = stopTime
 
         with conn.cursor() as cursor:
           fieldsStr = ', '.join(map(lambda x: '`' + x + '`', row.keys()))
@@ -48,6 +72,7 @@ def handler(event, context):
           sql = 'REPLACE INTO `matchinfo` (%s) VALUES (%s)' % (fieldsStr, valuesStr)
           cursor.execute(sql, tuple(row.values()))
 
+        # 保存赛事胜平负数据
         if value.get('had'):
           tmpValue = value['had']
           row = dict()
@@ -64,6 +89,7 @@ def handler(event, context):
             sql = 'REPLACE INTO `spf` (%s) VALUES (%s)' % (fieldsStr, valuesStr)
             cursor.execute(sql, tuple(row.values()))
 
+        # 保存赛事让球胜平负数据
         if value.get('hhad'):
           tmpValue = value['hhad']
           row = dict()
@@ -81,6 +107,7 @@ def handler(event, context):
             sql = 'REPLACE INTO `rqspf` (%s) VALUES (%s)' % (fieldsStr, valuesStr)
             cursor.execute(sql, tuple(row.values()))
 
+        # 保存赛事比分数据
         if value.get('crs'):
           tmpValue = value['crs']
           row = dict()
@@ -123,6 +150,7 @@ def handler(event, context):
             sql = 'REPLACE INTO `bf` (%s) VALUES (%s)' % (fieldsStr, valuesStr)
             cursor.execute(sql, tuple(row.values()))
 
+        # 保存赛事半全场数据
         if value.get('hafu'):
           tmpValue = value['hafu']
           row = dict()
@@ -144,6 +172,7 @@ def handler(event, context):
             sql = 'REPLACE INTO `bqc` (%s) VALUES (%s)' % (fieldsStr, valuesStr)
             cursor.execute(sql, tuple(row.values()))
 
+        # 保存赛事总比分数据
         if value.get('ttg'):
           tmpValue = value['ttg']
           row = dict()
@@ -164,6 +193,7 @@ def handler(event, context):
             sql = 'REPLACE INTO `zjq` (%s) VALUES (%s)' % (fieldsStr, valuesStr)
             cursor.execute(sql, tuple(row.values()))
 
+    # 保存本次抓取日志
     with conn.cursor() as cursor:
       cursor.execute('INSERT INTO `crawlerlog` (`date`, `sha256`, `content`) VALUES (%s, %s, %s)', (today, sha256, resultText))
     conn.commit()

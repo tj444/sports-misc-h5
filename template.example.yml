@@ -13,6 +13,15 @@ Resources:
         Timeout: 60
         MemorySize: 512
         CodeUri: functions/crawler
+        EnvironmentVariables:
+          ALIYUN_AK: ALIYUN_AK_XXXXX
+          ALIYUN_SK: ALIYUN_SK_XXXXX
+      Events:
+        TmTrigger:
+          Type: Timer
+          Properties: 
+            CronExpression: "0 0/5 * * * *"  # 每隔 5 分钟抓取赛事数据
+            Enable: true    
     apiMatchGetFootball:
       Type: 'Aliyun::Serverless::Function'
       Properties:
@@ -21,6 +30,9 @@ Resources:
         Timeout: 60
         MemorySize: 512
         CodeUri: functions/apiMatchGetFootball
+        EnvironmentVariables:
+          ALIYUN_AK: ALIYUN_AK_XXXXX
+          ALIYUN_SK: ALIYUN_SK_XXXXX
       Events:
         httpTrigger:
           Type: HTTP
@@ -37,3 +49,12 @@ Resources:
         Timeout: 60
         MemorySize: 512
         CodeUri: functions/timeCrawler
+        EnvironmentVariables:
+          ALIYUN_AK: ALIYUN_AK_XXXXX
+          ALIYUN_SK: ALIYUN_SK_XXXXX
+      Events:
+        TmTrigger:
+          Type: Timer
+          Properties: 
+            CronExpression: "0 10 0 * * *"  # 每天早上 8:10 抓取当天的售卖时间
+            Enable: true
