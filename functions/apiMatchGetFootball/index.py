@@ -83,8 +83,8 @@ defaultFields = dict({
 
 def handler(environ, start_response):
   conn = db.getConnection()
-  today = datetime.date.today().isoformat()
   data = []
+  now = datetime.datetime.timestamp(datetime.datetime.now())
 
   try :
     sql = """SELECT `matchinfo`.`matchId`,`league`,`hostTeam`,`visitingTeam`,`matchPeriod`,`number`,`printStopTime`,`saleStopTime`,`startTime`,`stopTime`,
@@ -99,10 +99,10 @@ def handler(environ, start_response):
     LEFT OUTER JOIN `bf` ON `matchinfo`.`matchId` = `bf`.`matchId`
     LEFT OUTER JOIN `bqc` ON `matchinfo`.`matchId` = `bqc`.`matchId`
     LEFT OUTER JOIN `zjq` ON `matchinfo`.`matchId` = `zjq`.`matchId`
-    WHERE matchPeriod > %s
+    WHERE saleStopTime >= %s
     """
     with conn.cursor() as cursor:
-      cursor.execute(sql, (today))
+      cursor.execute(sql, (now))
       dbResult = cursor.fetchall()
       if len(dbResult) > 0:
         for row in dbResult:

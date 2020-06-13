@@ -5,6 +5,7 @@ import requests
 import db
 import hashlib
 import datetime
+from math import floor
 
 logger = logging.getLogger()
 
@@ -59,12 +60,13 @@ def handler(event, context):
         row = dict()
         row['matchId'] = matchId
         row['league'] = value['l_cn']
-        row['hostTeam'] = value['h_cn']
-        row['visitingTeam'] = value['a_cn']
+        row['hostTeam'] = value['h_cn_abbr']
+        row['visitingTeam'] = value['a_cn_abbr']
         row['matchPeriod'] = value['b_date']
         row['number'] = value['num']
         row['startTime'] = startTime
         row['stopTime'] = stopTime
+        row['saleStopTime'] = floor(datetime.datetime.timestamp(datetime.datetime.strptime('%s %s +0800' % (value['date'], value['time']), '%Y-%m-%d %H:%M:%S %z')) * 1000)
 
         with conn.cursor() as cursor:
           fieldsStr = ', '.join(map(lambda x: '`' + x + '`', row.keys()))
