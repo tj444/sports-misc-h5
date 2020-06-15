@@ -64,6 +64,7 @@ DROP TABLE IF EXISTS bf; CREATE TABLE bf (
     `threeToZero` varchar(5),
     `threeToOne` varchar(5),
     `threeToTwo` varchar(5),
+    `threeToThree` varchar(5),
     `fourToZero` varchar(5),
     `fourToOne` varchar(5),
     `fourToTwo` varchar(5),

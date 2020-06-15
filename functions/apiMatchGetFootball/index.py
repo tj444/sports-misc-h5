@@ -4,6 +4,7 @@ import logging
 import json
 import db
 import datetime
+from math import floor
 
 logger = logging.getLogger()
 
@@ -51,6 +52,7 @@ defaultFields = dict({
   "threeToZero": "",
   "threeToOne": "",
   "threeToTwo": "",
+  "threeToThree": "",
   "fourToZero": "",
   "fourToOne": "",
   "fourToTwo": "",
@@ -84,13 +86,13 @@ defaultFields = dict({
 def handler(environ, start_response):
   conn = db.getConnection()
   data = []
-  now = datetime.datetime.timestamp(datetime.datetime.now())
+  now = floor(datetime.datetime.timestamp(datetime.datetime.now()) * 1000)
 
   try :
     sql = """SELECT `matchinfo`.`matchId`,`league`,`hostTeam`,`visitingTeam`,`matchPeriod`,`number`,`printStopTime`,`saleStopTime`,`startTime`,`stopTime`,
     `isSpf`,`isSingle`,`win`,`level`,`lose`,
     `isRqspf`,`isLetSingle`,`letCount`,`letWin`,`letLevel`,`letLose`,
-    `isBf`,`zeroToZero`,`zeroToOne`,`zeroToTwo`,`zeroToThree`,`zeroToFour`,`zeroToFive`,`oneToZero`,`oneToOne`,`oneToTwo`,`oneToThree`,`oneToFour`,`oneToFive`,`twoToZero`,`twoToOne`,`twoToTwo`,`twoToThree`,`twoToFour`,`twoToFive`,`threeToZero`,`threeToOne`,`threeToTwo`,`fourToZero`,`fourToOne`,`fourToTwo`,`fiveToZero`,`fiveToOne`,`fiveToTwo`,`winOther`,`levelOther`,`loseOther`,
+    `isBf`,`zeroToZero`,`zeroToOne`,`zeroToTwo`,`zeroToThree`,`zeroToFour`,`zeroToFive`,`oneToZero`,`oneToOne`,`oneToTwo`,`oneToThree`,`oneToFour`,`oneToFive`,`twoToZero`,`twoToOne`,`twoToTwo`,`twoToThree`,`twoToFour`,`twoToFive`,`threeToZero`,`threeToOne`,`threeToTwo`,`threeToThree`,`fourToZero`,`fourToOne`,`fourToTwo`,`fiveToZero`,`fiveToOne`,`fiveToTwo`,`winOther`,`levelOther`,`loseOther`,
     `isBqc`,`winWin`,`winLevel`,`winLose`,`levelWin`,`levelLevel`,`levelLose`,`loseWin`,`loseLevel`,`loseLose`,
     `isZjq`,`zero`,`one`,`two`,`three`,`four`,`five`,`six`,`seven`
     FROM `matchinfo`

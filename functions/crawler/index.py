@@ -136,6 +136,7 @@ def handler(event, context):
           row['threeToZero'] = tmpValue['0300']
           row['threeToOne'] = tmpValue['0301']
           row['threeToTwo'] = tmpValue['0302']
+          row['threeToThree'] = tmpValue['0303']
           row['fourToZero'] = tmpValue['0400']
           row['fourToOne'] = tmpValue['0401']
           row['fourToTwo'] = tmpValue['0402']
