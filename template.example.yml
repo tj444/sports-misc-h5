@@ -5,6 +5,13 @@ Resources:
     Type: 'Aliyun::Serverless::Service'
     Properties:
       Description: This is sporttery service
+      Role: 'ROLE_ARN_XXXXX'
+      VpcConfig:
+        VpcId: VPC_ID_XXXXX
+        VSwitchIds:
+          - V_SWITCH_ID_XXXXX
+        SecurityGroupId: SECURITY_GROUP_ID_XXXXX
+      InternetAccess: true
     crawler:
       Type: 'Aliyun::Serverless::Function'
       Properties:
@@ -21,7 +28,7 @@ Resources:
           Type: Timer
           Properties: 
             CronExpression: "0 0/5 * * * *"  # 每隔 5 分钟抓取赛事数据
-            Enable: true    
+            Enable: true
     apiMatchGetFootball:
       Type: 'Aliyun::Serverless::Function'
       Properties:
