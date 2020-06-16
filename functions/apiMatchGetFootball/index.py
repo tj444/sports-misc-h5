@@ -89,7 +89,7 @@ def handler(environ, start_response):
   now = floor(datetime.datetime.timestamp(datetime.datetime.now()) * 1000)
 
   try :
-    sql = """SELECT `matchinfo`.`matchId`,`league`,`hostTeam`,`visitingTeam`,`matchPeriod`,`number`,`printStopTime`,`saleStopTime`,`startTime`,`stopTime`,
+    sql = """SELECT `matchinfo`.`matchId`,`leagueAbbr` as `league`,`hostTeamAbbr` as `hostTeam`,`visitingTeamAbbr` as `visitingTeam`,`matchPeriod`,`number`,`printStopTime`,`saleStopTime`,`startTime`,`stopTime`,
     `isSpf`,`isSingle`,`win`,`level`,`lose`,
     `isRqspf`,`isLetSingle`,`letCount`,`letWin`,`letLevel`,`letLose`,
     `isBf`,`zeroToZero`,`zeroToOne`,`zeroToTwo`,`zeroToThree`,`zeroToFour`,`zeroToFive`,`oneToZero`,`oneToOne`,`oneToTwo`,`oneToThree`,`oneToFour`,`oneToFive`,`twoToZero`,`twoToOne`,`twoToTwo`,`twoToThree`,`twoToFour`,`twoToFive`,`threeToZero`,`threeToOne`,`threeToTwo`,`threeToThree`,`fourToZero`,`fourToOne`,`fourToTwo`,`fiveToZero`,`fiveToOne`,`fiveToTwo`,`winOther`,`levelOther`,`loseOther`,

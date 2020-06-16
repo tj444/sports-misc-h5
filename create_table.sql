@@ -2,8 +2,16 @@ DROP TABLE IF EXISTS matchinfo; CREATE TABLE matchinfo (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `matchId` int NOT NULL UNIQUE,
     `league` varchar(20),
+    `leagueAbbr` varchar(5),
+    `leagueId` int,
     `hostTeam` varchar(20),
+    `hostTeamAbbr` varchar(5),
+    `hostTeamId` int,
+    `hostTeamOrder` varchar(10),
     `visitingTeam` varchar(20),
+    `visitingTeamAbbr` varchar(5),
+    `visitingTeamId` int,
+    `visitingTeamOrder` varchar(10),
     `matchPeriod` date,
     `number` varchar(10),
     `printStopTime` bigint,
@@ -24,7 +32,7 @@ DROP TABLE IF EXISTS spf; CREATE TABLE spf (
     `lose` varchar(5),
     `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) default charset utf8mb4;
       
 DROP TABLE IF EXISTS rqspf; CREATE TABLE rqspf (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -37,7 +45,7 @@ DROP TABLE IF EXISTS rqspf; CREATE TABLE rqspf (
     `letLose` varchar(5),
     `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) default charset utf8mb4;
 
 DROP TABLE IF EXISTS bf; CREATE TABLE bf (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -76,7 +84,7 @@ DROP TABLE IF EXISTS bf; CREATE TABLE bf (
     `loseOther` varchar(5),
     `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) default charset utf8mb4;
 
 DROP TABLE IF EXISTS bqc; CREATE TABLE bqc (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -93,7 +101,7 @@ DROP TABLE IF EXISTS bqc; CREATE TABLE bqc (
     `loseLose` varchar(5),
     `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) default charset utf8mb4;
 
 DROP TABLE IF EXISTS zjq; CREATE TABLE zjq (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -109,7 +117,7 @@ DROP TABLE IF EXISTS zjq; CREATE TABLE zjq (
     `seven` varchar(5),
     `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) default charset utf8mb4;
 
 DROP TABLE IF EXISTS saletime; CREATE TABLE saletime (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -119,7 +127,7 @@ DROP TABLE IF EXISTS saletime; CREATE TABLE saletime (
     `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY `idx_date` (`date`)
-);
+) default charset utf8mb4;
 
 DROP TABLE IF EXISTS crawlerlog; CREATE TABLE crawlerlog (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -129,4 +137,4 @@ DROP TABLE IF EXISTS crawlerlog; CREATE TABLE crawlerlog (
     `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     KEY `idx_date_sha256` (`date`, `sha256`)
-);
+) default charset utf8mb4;
