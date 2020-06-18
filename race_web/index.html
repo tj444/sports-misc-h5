@@ -1,0 +1,1949 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>比赛项目</title>
+    <link rel="stylesheet" href="js/layui/css/layui.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+<div id="app">
+
+    <div class="choose-race" v-show="chooseRaceShow">
+        <div class="layui-header">
+            <div class="layui-header-back"></div>
+            <div class="layui-header-center">混合投注</div>
+            <div class="layui-header-filter" @click="showHideFliter"></div>
+        </div>
+        <div class="layui-container">
+            <div class="layui-row" v-for="(dateGroup, index) in dateGroupData" v-show="dateGroup.data.length">
+                <div class="layui-col-xs12 race-title">
+                    <div class="race-date">
+                        {{ index }} 星期{{ dateGroup.weekDay }} {{ dateGroup.data.length }}场比赛 (红框选项可投单关)
+                    </div>
+                    <i :class="[dateGroup.isShow ? 'layui-icon layui-icon-up' : 'layui-icon layui-icon-down']"
+                       @click="showHideRace(index, dateGroup.isShow)"></i>
+                </div>
+
+                <div class="layui-col-xs12 race-list" v-for="(race, index2) in dateGroup.data" v-show="dateGroup.isShow">
+                    <div class="layui-col-xs2 race-time">
+                        <p>{{ race.number }}</p>
+                        <p>{{ race.league }}</p>
+                        <p>{{ race.saleStopTime | formatTime }}(截)</p>
+                    </div>
+                    <div class="layui-col-xs10">
+                        <div class="vs">
+                            <h4>{{ race.hostTeam }}</h4>
+                            <h4>VS</h4>
+                            <h4>{{ race.visitingTeam }}</h4>
+                        </div>
+                        <div class="race-data">
+                            <div class="layui-col-xs2">
+                                <div class="race-score">0</div>
+                                <div class="race-score" :class="[race.letCount < 0 ? 'layui-bg-green' : 'layui-bg-red']">
+                                    {{ race.letCount }}
+                                </div>
+                            </div>
+                            <div class="layui-col-xs10">
+                                <table class="layui-table" :class="isSingle(index, index2)">
+                                    <tr>
+                                        <td :class="{'layui-bg-red' : race.winCheck == true}"
+                                            @click="chooseScore(index, index2, 'win')" v-show="race.win">
+                                            胜{{ race.win }}
+                                        </td>
+                                        <td :class="{'layui-bg-red' : race.levelCheck == true}"
+                                            @click="chooseScore(index, index2, 'level')" v-show="race.win">
+                                            平{{ race.level }}
+                                        </td>
+                                        <td :class="{'layui-bg-red' : race.loseCheck == true}"
+                                            @click="chooseScore(index, index2, 'lose')" v-show="race.win">
+                                            负{{ race.lose }}
+                                        </td>
+                                        <td colspan="3" v-show="!race.win" style="border-left: 1px solid #c5c5c5;border-top-left-radius: 10px;">
+                                            未开售
+                                        </td>
+                                        <td class="more" rowspan="2" @click="showHideMore(index, index2)">
+                                            更多<br>选项
+                                            <span class="check-score-num layui-bg-red" :class="{'layui-hide': !race.otherNum}">{{ race.otherNum }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td :class="{'layui-bg-red' : race.letWinCheck == true}"
+                                            @click="chooseScore(index, index2, 'letWin')" v-show="race.letWin">
+                                            胜{{ race.letWin }}
+                                        </td>
+                                        <td :class="{'layui-bg-red' : race.letLevelCheck == true}"
+                                            @click="chooseScore(index, index2, 'letLevel')" v-show="race.letWin">
+                                            平{{ race.letLevel }}
+                                        </td>
+                                        <td :class="{'layui-bg-red' : race.letLoseCheck == true}"
+                                            @click="chooseScore(index, index2, 'letLose')" v-show="race.letWin">
+                                            负{{ race.letLose }}
+                                        </td>
+                                        <td colspan="3" v-show="!race.letWin" style="border-left: 1px solid #c5c5c5;border-bottom-left-radius: 10px;">
+                                            未开售
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-footer">
+            <div class="checknum">已选择{{ chooseRaceNum }}场比赛</div>
+            <button type="button" class="layui-btn layui-btn-danger layui-btn-sm" @click="chooseResultShowHide('tou')">投注</button>
+        </div>
+    </div>
+
+    <div class="choose-result" v-show="chooseResultShow">
+        <div class="layui-header">
+            <div class="layui-header-back" @click="chooseResultShowHide"></div>
+            <div class="layui-header-center">投注列表</div>
+            <div class="layui-header-filter" style="opacity: 0;"></div>
+        </div>
+        <div class="layui-container">
+            <div class="layui-row oprate">
+                <button type="button" class="layui-btn layui-btn-normal layui-btn-sm" @click="chooseResultShowHide">
+                    <i class="layui-icon layui-icon-addition"></i>添加赛事
+                </button>
+                <button type="button" class="layui-btn layui-btn-warm layui-btn-sm" @click="clearShowHide">
+                    <i class="layui-icon layui-icon-delete"></i>清空重选
+                </button>
+            </div>
+            <div class="result-list">
+                <div class="race-result"
+                     v-for="(item, index) in chooseRace">
+                    <div class="layui-row head">
+                        <div class="layui-col-xs3">
+                            <i class="layui-icon layui-icon-delete"
+                               @click="removeShowHide(index)"></i>
+                            <p>{{ item.number }}</p>
+                        </div>
+                        <div class="layui-col-xs8">
+                            <h5>{{ item.hostTeam }}</h5>
+                            <span>{{ item.saleStopTime | formatTime2 }}</span>
+                            <h5>{{ item.visitingTeam }}</h5>
+                        </div>
+                        <div class="layui-col-xs1">
+                            <i class="layui-icon layui-icon-right"
+                               @click="editRace(index)"></i>
+                        </div>
+                    </div>
+                    <div class="layui-row score" v-show=" item.winChoose || item.levelChoose || item.loseChoose ">
+                        <div class="layui-col-xs2"></div>
+                        <div class="layui-col-xs3" :class="{'layui-bg-red':item.winChoose}">
+                            <span>胜</span>
+                            <span>{{ item.win }}</span>
+                        </div>
+                        <div class="layui-col-xs3" :class="{'layui-bg-red':item.levelChoose}">
+                            <span>平</span>
+                            <span>{{ item.level }}</span>
+                        </div>
+                        <div class="layui-col-xs3" :class="{'layui-bg-red':item.loseChoose}">
+                            <span>负</span>
+                            <span>{{ item.lose }}</span>
+                        </div>
+                        <div class="layui-col-xs1"></div>
+                    </div>
+                    <div class="layui-row score" v-show=" item.letWinChoose || item.letLevelChoose || item.letLoseChoose ">
+                        <div class="layui-col-xs2">
+                            <span class="let-count" :class="[item.letCount < 0 ? 'layui-bg-green' : 'layui-bg-red']">{{ item.letCount }}</span>
+                        </div>
+                        <div class="layui-col-xs3" :class="{'layui-bg-red':item.letWinChoose}">
+                            <span>胜</span>
+                            <span>{{ item.letWin }}</span>
+                        </div>
+                        <div class="layui-col-xs3" :class="{'layui-bg-red':item.letLevelChoose}">
+                            <span>平</span>
+                            <span>{{ item.letLevel }}</span>
+                        </div>
+                        <div class="layui-col-xs3" :class="{'layui-bg-red':item.letLoseChoose}">
+                            <span>负</span>
+                            <span>{{ item.letLose }}</span>
+                        </div>
+                        <div class="layui-col-xs1"></div>
+                    </div>
+                    <div class="other">
+                        <div class="layui-col-xs3 layui-bg-red"
+                             v-for="(item2, index2) in other" v-show="item[index2 + 'Choose']">
+                            <span>{{ item2 }}</span>
+                            <span>{{ item[index2] }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-footer">
+            <div class="layui-row guanbei">
+                <div class="layui-col-xs5 guan" @click="guanShowHide('guan')">
+                    <p>{{ guanWord }}</p>
+                    <i class="layui-icon layui-icon-down"></i>
+                </div>
+                <div class="layui-col-xs5 beishu">
+                    倍数:
+                    <div class="bei-oprate">
+                        <span class="jiajian jian" @click="minusBei">-</span>
+                        <span class="bei" @click="numberShowHide">{{ bei }}</span>
+                        <span class="jiajian jia" @click="addBei">+</span>
+                    </div>
+                    倍
+                </div>
+            </div>
+            <div class="money">
+                {{ zhuNum }}注<span>{{ zhuNum * bei * 2 }}</span>元 预计奖金：<span>{{ evenRound(jiangMin * bei, 2) }}～{{ evenRound(jiangMax * bei, 2) }}</span>元
+            </div>
+            <div class="bottom">
+                <p class="layui-col-xs8 bottom">点击复制订单按钮，微信中<br>找到店主，长按输入框粘贴并发送</p>
+                <div class="layui-col-xs4 copy layui-bg-red" @click="copyResult">复制订单</div>
+                <input type="hidden" id="copycontent" v-model="copyContent">
+            </div>
+        </div>
+    </div>
+
+    <div class="grey-bg" v-show="greyBgShow">
+    </div>
+    <div class="fixed number" v-show="numberShow">
+        <div class="number-result">{{ number }}</div>
+        <div class="number-list">
+            <div @click="numberPress(1)">1</div>
+            <div @click="numberPress(2)">2</div>
+            <div @click="numberPress(3)">3</div>
+            <div @click="numberPress(4)">4</div>
+            <div @click="numberPress(5)">5</div>
+            <div @click="numberPress(6)">6</div>
+            <div @click="numberPress(7)">7</div>
+            <div @click="numberPress(8)">8</div>
+            <div @click="numberPress(9)">9</div>
+            <div class="clear-number" @click="clearNumber">清空</div>
+            <div @click="numberPress(0)">0</div>
+            <div class="backspace-number" @click="backNumber">退格</div>
+        </div>
+        <div class="confirm">
+            <div class="cancel" @click="numberShowHide">取消</div>
+            <div class="submit" @click="numberConfirm">确定</div>
+        </div>
+    </div>
+
+    <div class="fixed clear-confirm" v-show="clearShow">
+        <div class="content">
+            确定要清空重选吗？
+        </div>
+        <div class="confirm">
+            <div class="cancel" @click="clearShowHide">取消</div>
+            <div class="submit" @click="clearConfirm">确定</div>
+        </div>
+    </div>
+
+    <div class="fixed clear-confirm" v-show="removeShow">
+        <div class="content">
+            确定要删除此比赛吗？
+        </div>
+        <div class="confirm">
+            <div class="cancel" @click="removeShowHide">取消</div>
+            <div class="submit" @click="removeConfirm">确定</div>
+        </div>
+    </div>
+
+    <div class="fixed filter-race" v-show="fliterShow">
+        <div class="oprate">
+            <button type="button" class="layui-btn layui-btn-primary" @click="chooseLeagueAll">全选</button>
+            <button type="button" class="layui-btn layui-btn-primary" @click="chooseLeagueFan">反选</button>
+        </div>
+        <div class="match">
+            <div v-for="(item, index) in league"
+                 @click="chooseLeague(index)"
+                 :class="{'layui-bg-red' : item == true}">
+                {{ index }}
+            </div>
+        </div>
+        <div class="confirm">
+            <div class="cancel" @click="showHideFliter">取消</div>
+            <div class="submit" @click="fliterRace">确定</div>
+        </div>
+    </div>
+
+    <div class="fixed choose-guan" v-show="guanShow">
+        <div v-show="freeGuan.length">
+            <h4>自由过关</h4>
+            <div class="guan">
+                <div v-for="(item, index) in freeGuan"
+                :class="{'layui-bg-red':item.choose}"
+                @click="chooseGuan(index, 'free')">
+                    {{ item.name }}
+                </div>
+            </div>
+        </div>
+        <div v-show="duoGuan.length">
+            <h4>多串过关</h4>
+            <div class="guan">
+                <div v-for="(item, index) in duoGuan"
+                 :class="{'layui-bg-red':item.choose}"
+                 @click="chooseGuan(index, 'duo')">
+                    {{ item.name }}
+                </div>
+            </div>
+        </div>
+        <div class="confirm">
+            <div class="cancel" @click="guanShowHide()">取消</div>
+            <div class="submit" @click="guanConfirm">确定</div>
+        </div>
+    </div>
+
+    <div class="fixed more-check" id="more-check" v-show="moreShow">
+        <div class="match-vs">
+            <h4>{{ moreData.hostTeam }}</h4>
+            <h4>VS</h4>
+            <h4>{{ moreData.visitingTeam }}</h4>
+        </div>
+        <div class="match-score">
+            <div class="wan sheng">
+                <div class="wan-title">胜平负/让球</div>
+                <table class="layui-table">
+                    <tr>
+                        <td class="layui-bg layui-bg-gray">0</td>
+                        <td :class="{'layui-bg-red' : moreData.winChoose == true}"
+                            @click="chooseScoreMore('winChoose')" v-show="moreData.win">
+                            <span>胜</span>
+                            <span>{{ moreData.win }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.levelChoose == true}"
+                            @click="chooseScoreMore('levelChoose')" v-show="moreData.win">
+                            <span>平</span>
+                            <span>{{ moreData.level }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.loseChoose == true}"
+                            @click="chooseScoreMore('loseChoose')" v-show="moreData.win">
+                            <span>负</span>
+                            <span>{{ moreData.lose }}</span>
+                        </td>
+                        <td colspan="3" v-show="!moreData.win">
+                            未开售
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="layui-bg layui-bg-blue">{{ moreData.letCount }}</td>
+                        <td :class="{'layui-bg-red' : moreData.letWinChoose == true}"
+                            @click="chooseScoreMore('letWinChoose')" v-show="moreData.letWin">
+                            <span>胜</span>
+                            <span>{{ moreData.letWin }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.letLevelChoose == true}"
+                            @click="chooseScoreMore('letLevelChoose')" v-show="moreData.letWin">
+                            <span>平</span>
+                            <span>{{ moreData.letLevel }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.letLoseChoose == true}"
+                            @click="chooseScoreMore('letLoseChoose')" v-show="moreData.letWin">
+                            <span>负</span>
+                            <span>{{ moreData.letLose }}</span>
+                        </td>
+                        <td colspan="3" v-show="!moreData.letWin">
+                            未开售
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="wan">
+                <div class="wan-title"><span class="layui-bg-red">单</span>比分</div>
+                <table class="layui-table">
+                    <tr>
+                        <td rowspan="3" class="layui-bg layui-bg-red">主胜</td>
+                        <td :class="{'layui-bg-red' : moreData.oneToZeroChoose == true}"
+                            @click="chooseScoreMore('oneToZeroChoose')">
+                            <span>1:0</span>
+                            <span>{{ moreData.oneToZero }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.twoToZeroChoose == true}"
+                            @click="chooseScoreMore('twoToZeroChoose')">
+                            <span>2:0</span>
+                            <span>{{ moreData.twoToZero }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.twoToOneChoose == true}"
+                            @click="chooseScoreMore('twoToOneChoose')">
+                            <span>2:1</span>
+                            <span>{{ moreData.twoToOne }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.threeToZeroChoose == true}"
+                            @click="chooseScoreMore('threeToZeroChoose')">
+                            <span>3:0</span>
+                            <span>{{ moreData.threeToZero }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.threeToOneChoose == true}"
+                            @click="chooseScoreMore('threeToOneChoose')">
+                            <span>3:1</span>
+                            <span>{{ moreData.threeToOne }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td :class="{'layui-bg-red' : moreData.threeToTwoChoose == true}"
+                            @click="chooseScoreMore('threeToTwoChoose')">
+                            <span>3:2</span>
+                            <span>{{ moreData.threeToTwo }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.fourToZeroChoose == true}"
+                            @click="chooseScoreMore('fourToZeroChoose')">
+                            <span>4:0</span>
+                            <span>{{ moreData.fourToZero }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.fourToOneChoose == true}"
+                            @click="chooseScoreMore('fourToOneChoose')">
+                            <span>4:1</span>
+                            <span>{{ moreData.fourToOne }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.fourToTwoChoose == true}"
+                            @click="chooseScoreMore('fourToTwoChoose')">
+                            <span>4:2</span>
+                            <span>{{ moreData.fourToTwo }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.fiveToZeroChoose == true}"
+                            @click="chooseScoreMore('fiveToZeroChoose')">
+                            <span>5:0</span>
+                            <span>{{ moreData.fiveToZero }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td :class="{'layui-bg-red' : moreData.fiveToOneChoose == true}"
+                            @click="chooseScoreMore('fiveToOneChoose')">
+                            <span>5:1</span>
+                            <span>{{ moreData.fiveToOne }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.fiveToTwoChoose == true}"
+                            @click="chooseScoreMore('fiveToTwoChoose')">
+                            <span>5:2</span>
+                            <span>{{ moreData.fiveToTwo }}</span>
+                        </td>
+                        <td colspan="100" :class="{'layui-bg-red' : moreData.winOtherChoose == true}"
+                            @click="chooseScoreMore('winOtherChoose')">
+                            <span>胜其他</span>
+                            <span>{{ moreData.winOther }}</span>
+                        </td>
+                    </tr>
+                </table>
+                <table class="layui-table">
+                    <tr>
+                        <td rowspan="3" class="layui-bg layui-bg-green">平</td>
+                        <td :class="{'layui-bg-red' : moreData.zeroToZeroChoose == true}"
+                            @click="chooseScoreMore('zeroToZeroChoose')">
+                            <span>0:0</span>
+                            <span>{{ moreData.zeroToZero }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.oneToOneChoose == true}"
+                            @click="chooseScoreMore('oneToOneChoose')">
+                            <span>1:1</span>
+                            <span>{{ moreData.oneToOne }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.twoToTwoChoose == true}"
+                            @click="chooseScoreMore('twoToTwoChoose')">
+                            <span>2:2</span>
+                            <span>{{ moreData.twoToTwo }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.threeToThreeChoose == true}"
+                            @click="chooseScoreMore('threeToThreeChoose')">
+                            <span>3:3</span>
+                            <span>{{ moreData.threeToThree }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.levelOtherChoose == true}"
+                            @click="chooseScoreMore('levelOtherChoose')">
+                            <span>平其他</span>
+                            <span>{{ moreData.levelOther }}</span>
+                        </td>
+                    </tr>
+                </table>
+                <table class="layui-table">
+                    <tr>
+                        <td rowspan="3" class="layui-bg layui-bg-blue">主负</td>
+                        <td :class="{'layui-bg-red' : moreData.zeroToOneChoose == true}"
+                            @click="chooseScoreMore('zeroToOneChoose')">
+                            <span>0:1</span>
+                            <span>{{ moreData.zeroToOne }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.zeroToTwoChoose == true}"
+                            @click="chooseScoreMore('zeroToTwoChoose')">
+                            <span>0:2</span>
+                            <span>{{ moreData.zeroToTwo }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.zeroToThreeChoose == true}"
+                            @click="chooseScoreMore('zeroToThreeChoose')">
+                            <span>0:3</span>
+                            <span>{{ moreData.zeroToThree }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.zeroToFourChoose == true}"
+                            @click="chooseScoreMore('zeroToFourChoose')">
+                            <span>0:4</span>
+                            <span>{{ moreData.zeroToFour }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.zeroToFiveChoose == true}"
+                            @click="chooseScoreMore('zeroToFiveChoose')">
+                            <span>0:5</span>
+                            <span>{{ moreData.zeroToFive }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td :class="{'layui-bg-red' : moreData.oneToTwoChoose == true}"
+                            @click="chooseScoreMore('oneToTwoChoose')">
+                            <span>1:2</span>
+                            <span>{{ moreData.oneToTwo }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.oneToThreeChoose == true}"
+                            @click="chooseScoreMore('oneToThreeChoose')">
+                            <span>1:3</span>
+                            <span>{{ moreData.oneToThree }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.oneToFourChoose == true}"
+                            @click="chooseScoreMore('oneToFourChoose')">
+                            <span>1:4</span>
+                            <span>{{ moreData.oneToFour }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.oneToFiveChoose == true}"
+                            @click="chooseScoreMore('oneToFiveChoose')">
+                            <span>1:5</span>
+                            <span>{{ moreData.oneToFive }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.twoToThreeChoose == true}"
+                            @click="chooseScoreMore('twoToThreeChoose')">
+                            <span>2:3</span>
+                            <span>{{ moreData.twoToThree }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td :class="{'layui-bg-red' : moreData.twoToFourChoose == true}"
+                            @click="chooseScoreMore('twoToFourChoose')">
+                            <span>2:4</span>
+                            <span>{{ moreData.twoToFour }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.twoToFiveChoose == true}"
+                            @click="chooseScoreMore('twoToFiveChoose')">
+                            <span>2:5</span>
+                            <span>{{ moreData.twoToFive }}</span>
+                        </td>
+                        <td colspan="100" :class="{'layui-bg-red' : moreData.loseOtherChoose == true}"
+                            @click="chooseScoreMore('loseOtherChoose')">
+                            <span>负其他</span>
+                            <span>{{ moreData.loseOther }}</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="wan">
+                <div class="wan-title"><span class="layui-bg-red">单</span>进球数</div>
+                <table class="layui-table">
+                    <tr>
+                        <td rowspan="2" class="layui-bg layui-bg-red">进球数</td>
+                        <td :class="{'layui-bg-red' : moreData.zeroChoose == true}"
+                            @click="chooseScoreMore('zeroChoose')">
+                            <span>0</span>
+                            <span>{{ moreData.zero }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.oneChoose == true}"
+                            @click="chooseScoreMore('oneChoose')">
+                            <span>1</span>
+                            <span>{{ moreData.one }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.twoChoose == true}"
+                            @click="chooseScoreMore('twoChoose')">
+                            <span>2</span>
+                            <span>{{ moreData.two }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.threeChoose == true}"
+                            @click="chooseScoreMore('threeChoose')">
+                            <span>3</span>
+                            <span>{{ moreData.three }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td :class="{'layui-bg-red' : moreData.fourChoose == true}"
+                            @click="chooseScoreMore('fourChoose')">
+                            <span>4</span>
+                            <span>{{ moreData.four }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.fiveChoose == true}"
+                            @click="chooseScoreMore('fiveChoose')">
+                            <span>5</span>
+                            <span>{{ moreData.five }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.sixChoose == true}"
+                            @click="chooseScoreMore('sixChoose')">
+                            <span>6</span>
+                            <span>{{ moreData.six }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.sevenChoose == true}"
+                            @click="chooseScoreMore('sevenChoose')">
+                            <span>7+</span>
+                            <span>{{ moreData.seven }}</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="wan">
+                <div class="wan-title"><span class="layui-bg-red">单</span>半全场</div>
+                <table class="layui-table">
+                    <tr>
+                        <td rowspan="3" class="layui-bg layui-bg-blue">半全场</td>
+                        <td :class="{'layui-bg-red' : moreData.winWinChoose == true}"
+                            @click="chooseScoreMore('winWinChoose')">
+                            <span>胜-胜</span>
+                            <span>{{ moreData.winWin }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.winLevelChoose == true}"
+                            @click="chooseScoreMore('winLevelChoose')">
+                            <span>胜-平</span>
+                            <span>{{ moreData.winLevel }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.winLoseChoose == true}"
+                            @click="chooseScoreMore('winLoseChoose')">
+                            <span>胜-负</span>
+                            <span>{{ moreData.winLose }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td :class="{'layui-bg-red' : moreData.levelWinChoose == true}"
+                            @click="chooseScoreMore('levelWinChoose')">
+                            <span>平-胜</span>
+                            <span>{{ moreData.levelWin }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.levelLevelChoose == true}"
+                            @click="chooseScoreMore('levelLevelChoose')">
+                            <span>平-平</span>
+                            <span>{{ moreData.levelLevel }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.levelLoseChoose == true}"
+                            @click="chooseScoreMore('levelLoseChoose')">
+                            <span>平-负</span>
+                            <span>{{ moreData.levelLose }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td :class="{'layui-bg-red' : moreData.loseWinChoose == true}"
+                            @click="chooseScoreMore('loseWinChoose')">
+                            <span>负-胜</span>
+                            <span>{{ moreData.loseWin }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.loseLevelChoose == true}"
+                            @click="chooseScoreMore('loseLevelChoose')">
+                            <span>负-平</span>
+                            <span>{{ moreData.loseLevel }}</span>
+                        </td>
+                        <td :class="{'layui-bg-red' : moreData.loseLoseChoose == true}"
+                            @click="chooseScoreMore('loseLoseChoose')">
+                            <span>负-负</span>
+                            <span>{{ moreData.loseLose }}</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="confirm">
+            <div class="cancel" @click="showHideMore">取消</div>
+            <div class="submit" @click="moreConfirm">确定</div>
+        </div>
+    </div>
+    <div class="load" v-show="loadShow">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+    </div>
+</div>
+<script src="js/layui/layui.js"></script>
+<script src="js/jquery-3.4.1.min.js"></script>
+<script src="js/layer_mobile/layer.js"></script>
+<script src="js/vue.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>-->
+<script src="js/axios.min.js"></script>
+<script>
+    let vm = new Vue({
+        el: "#app",
+        data: {
+            loadShow: true,
+            baseData: [],
+            dateGroupData: [],
+            league: [],
+            fliterShow: false,
+            moreShow: false,
+            greyBgShow: false,
+            chooseRaceShow: true,
+            chooseResultShow: false,
+            clearShow: false,
+            guanShow: false,
+            numberShow: false,
+            bei: 1,
+            number: '',
+            moreData: [],
+            chooseRaceNum: 0,
+            chooseRace: [],
+            removeShow: false,
+            removeIndex: '',
+            zhuRang1:
+                {
+                    // 胜平负
+                    'win': '胜',
+                    'level': '平',
+                    'lose': '负',
+                },
+            zhuRang2:
+                {
+                    // 胜平负 让球
+                    'letWin': '胜',
+                    'letLevel': '平',
+                    'letLose': '负',
+                },
+            other: {
+                // 比分 主胜
+                'oneToZero': '1:0',
+                'twoToZero': '2:0',
+                'twoToOne': '2:1',
+                'threeToZero': '3:0',
+                'threeToOne': '3:1',
+                'threeToTwo': '3:2',
+                'fourToZero': '4:0',
+                'fourToOne': '4:1',
+                'fourToTwo': '4:2',
+                'fiveToZero': '5:0',
+                'fiveToOne': '5:1',
+                'fiveToTwo': '5:2',
+                'winOther': '胜其他',
+                // 比分 平
+                'zeroToZero': '0:0',
+                'oneToOne': '1:1',
+                'twoToTwo': '2:2',
+                'threeToThree': '3:3',
+                'levelOther': '平其他',
+                // 比分 主负
+                'zeroToOne': '0:1',
+                'zeroToTwo': '0:2',
+                'zeroToThree': '0:3',
+                'zeroToFour': '0:4',
+                'zeroToFive': '0:5',
+                'oneToTwo': '1:2',
+                'oneToThree': '1:3',
+                'oneToFour': '1:4',
+                'oneToFive': '1:5',
+                'twoToThree': '2:3',
+                'twoToFour': '2:4',
+                'twoToFive': '2:5',
+                'lostOther': '负其他',
+                // 进球数
+                'zero': '0',
+                'one': '1',
+                'two': '2',
+                'three': '3',
+                'four': '4',
+                'five': '5',
+                'six': '6',
+                'seven': '7+',
+                // 半全场
+                'winWin': '胜-胜',
+                'winLevel': '胜-平',
+                'winLose': '胜-负',
+                'levelWin': '平-胜',
+                'levelLevel': '平-平',
+                'levelLose': '平-负',
+                'loseWin': '负-胜',
+                'loseLevel': '负-平',
+                'loseLose': '负-负',
+            },
+            freeGuan:[],
+            duoGuan:[],
+            guanWord: '选择过关',
+            chuanGuan: [
+                [
+                    {c1: 3, c2: 3},
+                    {c1: 3, c2: 4},
+                ],
+                [
+                    {c1: 4, c2: 4},
+                    {c1: 4, c2: 5},
+                    {c1: 4, c2: 6},
+                    {c1: 4, c2: 11},
+                ],
+                [
+                    {c1: 5, c2: 5},
+                    {c1: 5, c2: 6},
+                    {c1: 5, c2: 10},
+                    {c1: 5, c2: 16},
+                    {c1: 5, c2: 20},
+                    {c1: 5, c2: 26},
+                ],
+                [
+                    {c1: 6, c2: 6},
+                    {c1: 6, c2: 7},
+                    {c1: 6, c2: 15},
+                    {c1: 6, c2: 20},
+                    {c1: 6, c2: 22},
+                    {c1: 6, c2: 35},
+                    {c1: 6, c2: 42},
+                    {c1: 6, c2: 50},
+                    {c1: 6, c2: 57},
+                ],
+                [
+                    {c1: 7, c2: 7},
+                    {c1: 7, c2: 8},
+                    {c1: 7, c2: 21},
+                    {c1: 7, c2: 35},
+                    {c1: 7, c2: 120},
+                ],
+                [
+                    {c1: 8, c2: 8},
+                    {c1: 8, c2: 9},
+                    {c1: 8, c2: 28},
+                    {c1: 8, c2: 56},
+                    {c1: 8, c2: 70},
+                    {c1: 8, c2: 247},
+                ],
+            ],
+            chooseFreeGuan: [],
+            chooseDuoGuan: [],
+            zhuNum: 1,
+            jiangMin: 0,
+            jiangMax: 0,
+            copyContent: '',
+        },
+        filters: {
+            formatTime: function (value) {
+                let date = new Date(value);
+                let y = date.getFullYear();
+                let MM = date.getMonth() + 1;
+                MM = MM < 10 ? ('0' + MM) : MM;
+                let d = date.getDate();
+                d = d < 10 ? ('0' + d) : d;
+                let h = date.getHours();
+                h = h < 10 ? ('0' + h) : h;
+                let m = date.getMinutes();
+                m = m < 10 ? ('0' + m) : m;
+                let s = date.getSeconds();
+                s = s < 10 ? ('0' + s) : s;
+                return h + ':' + m;
+            },
+            formatTime2: function (value) {
+                let date = new Date(value);
+                let y = date.getFullYear();
+                let MM = date.getMonth() + 1;
+                MM = MM < 10 ? ('0' + MM) : MM;
+                let d = date.getDate();
+                d = d < 10 ? ('0' + d) : d;
+                let h = date.getHours();
+                h = h < 10 ? ('0' + h) : h;
+                let m = date.getMinutes();
+                m = m < 10 ? ('0' + m) : m;
+                let s = date.getSeconds();
+                s = s < 10 ? ('0' + s) : s;
+                return MM + '/' + d + ' ' + h + ':' + m;
+            }
+        },
+        mounted() {
+            axios.get("http://api.tc.jiedaimarket.cn/match/getFootball")
+                .then(response => {
+                    this.baseData       = response.data
+                    this.dateGroupData  = returnDateGroup(response.data)
+                    this.league         = returnLeague(response.data)
+
+                    this.loadShow       = false
+                }).catch(error => {
+                console.log(error.response)
+            });
+        },
+        computed: {
+            isSingle() {
+                return function(index, index2){
+                    let isSingle    = parseInt(this.dateGroupData[index]['data'][index2].isSingle)
+                    let isLetSingle = parseInt(this.dateGroupData[index]['data'][index2].isLetSingle)
+                    if( isSingle && isLetSingle ){
+                        return {single: true}
+                    }else if( isSingle ){
+                        return {'win-single': true}
+                    }else if( isLetSingle ){
+                        return {'let-single': true}
+                    }
+                }
+            },
+        },
+        methods: {
+            // 乘
+            numberMul (arg1, arg2) {
+                var m = 0;
+                var s1 = arg1.toString();
+                var s2 = arg2.toString();
+                try {
+                    m += s1.split(".")[1].length;
+                } catch (e) {}
+                try {
+                    m += s2.split(".")[1].length;
+                } catch (e) {}
+
+                return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m);
+            },
+            // 四舍六入五成双
+            evenRound(num, decimalPlaces) {
+                var d = decimalPlaces || 0;
+                var m = Math.pow(10, d);
+                var n = +(d ? num * m : num).toFixed(8); // Avoid rounding errors
+                var i = Math.floor(n), f = n - i;
+                var e = 1e-8; // Allow for rounding errors in f
+                var r = (f > 0.5 - e && f < 0.5 + e) ?
+                    ((i % 2 == 0) ? i : i + 1) : Math.round(n);
+                return d ? r / m : r;
+            },
+            // 显示隐藏删除比赛
+            removeShowHide(index) {
+                this.removeIndex = !isNaN(index) ? index : ''
+
+                this.removeShow = !this.removeShow
+                this.greyBgShow = !this.greyBgShow
+            },
+            // 删除比赛确认
+            removeConfirm() {
+                let chooseRace  = this.chooseRace
+                let removeIndex = this.removeIndex
+
+                this._deleteRace(chooseRace[removeIndex])
+
+                chooseRace.splice(removeIndex, 1)
+
+                this.chooseRaceNum--
+
+                this.removeIndex = ''
+
+                this.removeShowHide()
+
+                if( this.chooseRaceNum == 0 )
+                {
+                    this.chooseResultShowHide()
+                }else if( !this._canTouGuan() ){
+
+                    this.chooseResultShowHide()
+                    layer.open({
+                        content: '选择单关或至少选择两场比赛'
+                        ,skin: 'msg'
+                        ,time: 2
+                    });
+                    return false;
+                }
+
+                // 调用计算多少注(存储)， 调用计算多少钱，奖金
+
+                this.countZhu()
+            },
+            // 修改比赛
+            editRace(index) {
+                this.moreData = this.chooseRace[index]
+
+                this.moreShow = !this.moreShow
+                this.greyBgShow = !this.greyBgShow
+
+                this.chooseResultShowHide()
+            },
+            // 显示比赛
+            showHideRace(index, showhide) {
+                this.dateGroupData[index].isShow = !showhide
+            },
+            // 显示筛选
+            showHideFliter() {
+                this.fliterShow = !this.fliterShow
+                this.greyBgShow = !this.greyBgShow
+            },
+            // 显示更多选项
+            showHideMore(index, index2) {
+                if( !isNaN(index2) ){
+                    let data = this.dateGroupData[index]['data'][index2]
+
+                    for(let zhuRang in this.zhuRang1) {
+                        if( data[ zhuRang + 'Check' ] == true ){
+                            this.$set( data, zhuRang + 'Choose', true)
+                        }else{
+                            this.$set( data, zhuRang + 'Choose', false)
+                        }
+                    }
+
+                    for(let zhuRang in this.zhuRang2) {
+                        if( data[ zhuRang + 'Check' ] == true ){
+                            this.$set( data, zhuRang + 'Choose', true)
+                        }else{
+                            this.$set( data, zhuRang + 'Choose', false)
+                        }
+                    }
+
+                    data['key'] = {index: index, index2: index2}
+                    this.moreData = data
+                }
+                $(".match-score").scrollTop(0)
+
+                this.moreShow = !this.moreShow
+                this.greyBgShow = !this.greyBgShow
+            },
+            // 更多选项-确定
+            moreConfirm() {
+                let data        = this.moreData
+                let otherNum    = 0
+
+                for(let zhuRang in this.zhuRang1) {
+                    if( data[ zhuRang + 'Choose' ] == true ){
+                        this.$set( data, zhuRang + 'Check', true)
+                    }else{
+                        this.$set( data, zhuRang + 'Check', false)
+                    }
+                }
+
+                for(let zhuRang in this.zhuRang2) {
+                    if( data[ zhuRang + 'Choose' ] == true ){
+                        this.$set( data, zhuRang + 'Check', true)
+                    }else{
+                        this.$set( data, zhuRang + 'Check', false)
+                    }
+                }
+
+                for(let other in this.other) {
+                    if( data[ other + 'Choose' ] == true ){
+                        otherNum++
+                    }
+                }
+                this.$set( data, 'otherNum', otherNum)
+
+                this.countChooseRaceNum()
+
+                this.moreShow = !this.moreShow
+                this.greyBgShow = !this.greyBgShow
+            },
+            // 筛选赛事选择
+            chooseLeague(index) {
+                this.league[index] = !this.league[index]
+            },
+            // 筛选赛事全选
+            chooseLeagueAll() {
+                for (let index in this.league) {
+                    this.league[index] = true
+                }
+            },
+            // 筛选赛事反选
+            chooseLeagueFan() {
+                for (let index in this.league) {
+                    this.league[index] = !this.league[index]
+                }
+            },
+            // 确定筛选赛事
+            fliterRace() {
+                let chooseLeague = []
+                for (let index in this.league) {
+                    this.league[index] && chooseLeague.push(index)
+                }
+
+                if( chooseLeague.length == 0 ){
+                    layer.open({
+                        content: '没有选择'
+                        ,skin: 'msg'
+                        ,time: 2
+                    });
+                }else{
+                    this.dateGroupData  = returnDateGroup(this.baseData, chooseLeague)
+
+                    this.showHideFliter()
+                }
+            },
+            // 选择比分
+            chooseScore(index, index2, field) {
+                this.$set( this.dateGroupData[index]['data'][index2], field + 'Check', !this.dateGroupData[index]['data'][index2][field + 'Check'])
+                this.$set( this.dateGroupData[index]['data'][index2], field + 'Choose', !this.dateGroupData[index]['data'][index2][field + 'Choose'])
+
+                this.countChooseRaceNum()
+            },
+            // 更多选项
+            chooseScoreMore(field) {
+                this.$set( this.moreData, field, !this.moreData[field])
+            },
+            // 投注 / 返回 / 添加赛事
+            chooseResultShowHide(mark) {
+                if( mark == 'tou' ){ // 点击投注
+
+                    if( this.chooseRaceNum == 0 )
+                    {
+                        layer.open({
+                            content: '未选择任何比赛'
+                            ,skin: 'msg'
+                            ,time: 2
+                        });
+                        return false;
+                    }else if( this.chooseRaceNum > 8 ){
+
+                        layer.open({
+                            content: '最多可选8场比赛'
+                            ,skin: 'msg'
+                            ,time: 2
+                        });
+                        return false;
+                    }
+
+                    // 是否能投注
+                    if( !this._canTouGuan() ){
+                        layer.open({
+                            content: '选择单关或两场比赛'
+                            ,skin: 'msg'
+                            ,time: 2
+                        });
+                        return false;
+                    }
+
+                    // 调用计算多少注(存储)， 调用计算多少钱，奖金
+                    this.countZhu()
+
+                    for(let data of this.chooseRace)
+                    {
+                        // 查询是否选取胜平负
+                        for (let zhuRang in this.zhuRang1)
+                        {
+                            if( data[ zhuRang + 'Check' ] == true )
+                            {
+                                this.$set( data, zhuRang + 'Choose', true )
+                            }
+                        }
+
+                        // 查询是否选取胜平负让球
+                        for (let zhuRang in this.zhuRang2)
+                        {
+                            if( data[ zhuRang + 'Check' ] == true )
+                            {
+                                this.$set( data, zhuRang + 'Choose', true )
+                            }
+                        }
+
+                    }
+                }
+                document.documentElement.scrollTop = 0;
+                this.chooseRaceShow = !this.chooseRaceShow
+                this.chooseResultShow = !this.chooseResultShow
+
+            },
+            // 是否能投注(选的单关，或比赛大于1场 可投注)(算出啥关)
+            _canTouGuan(){
+                let isSingle = this._isSingle();
+                // 两场或两场以上
+                if( this.chooseRaceNum > 1 )
+                {
+                    return true;
+                }
+
+                // 比赛选一个，不是单关(需要选择单关或两场比赛)
+                if( isSingle == 1 )
+                {
+                    return true;
+                }
+
+                return false;
+            },
+            // 是否有单关(把单关放进去)
+            _isSingle(){
+                let isSingle = 1
+                outer:
+                for (let data of this.chooseRace)
+                {
+                    // 选择胜平负，并是单关
+                    for (let zhuRang in this.zhuRang1 )
+                    {
+                        if( data[ zhuRang + 'Check' ] == true && data.isSingle == false )
+                        {
+                            isSingle = 0;
+                            break outer;
+                        }
+                    }
+
+                    // 选择让球胜平负，并是单关
+                    for (let zhuRang in this.zhuRang2 )
+                    {
+                        if( data[ zhuRang + 'Check' ] == true && data.isLetSingle == false )
+                        {
+                            isSingle = 0;
+                            break outer;
+                        }
+                    }
+                }
+
+                let freeGuan = []
+                if( isSingle )
+                {
+                    freeGuan.push({name:'单关', value:'1X1', 'choose':true})
+                    this.guanWord = '单关'
+                    this.chooseFreeGuan = ['1X1']
+                    this.chooseDuoGuan = []
+                }
+
+                if( this.chooseRaceNum > 1 )
+                {
+                    for (let i = 2; i <= this.chooseRaceNum; i++)
+                    {
+                        if( i == this.chooseRaceNum )
+                        {
+                            freeGuan.push({name:i + '串1', value:i + 'X1', 'choose':true})
+                            this.guanWord = i + '串1'
+                            this.chooseFreeGuan = [i + 'X1']
+                            this.chooseDuoGuan = []
+                        }else{
+                            freeGuan.push({name:i + '串1', value:i + 'X1'})
+                        }
+                    }
+                }
+
+                this.freeGuan = freeGuan
+
+                if( this.chooseRaceNum > 1)
+                {
+                    let duoGuan = []
+
+                    let chuanGuan = this.chuanGuan.slice(0, this.chooseRaceNum - 2)
+
+                    if( chuanGuan.length > 0 )
+                    {
+                        for (let item of chuanGuan)
+                        {
+                            for (let item2 of item)
+                            {
+                                duoGuan.push({name: item2.c1 + '串' + item2.c2, value: item2.c1 + 'X' + item2.c2})
+                            }
+                        }
+                    }
+
+                    this.duoGuan = duoGuan
+                }
+
+                return isSingle;
+            },
+            // 清空重选
+            clearShowHide() {
+                this.clearShow = !this.clearShow
+                this.greyBgShow = !this.greyBgShow
+            },
+            // 确定清空
+            clearConfirm() {
+
+                for(let data of this.chooseRace)
+                {
+                    this._deleteRace(data)
+                }
+
+                // 清0 选择比赛
+                this.chooseRaceNum = 0
+                // 清0 倍数
+                this.bei = 1
+
+                this.clearShowHide()
+
+                this.chooseResultShowHide()
+            },
+            _deleteRace(data){
+                // 清空主让
+                for (let zhuRang in this.zhuRang1)
+                {
+                    this.$set(data, zhuRang + 'Check', false)
+                    this.$set(data, zhuRang + 'Choose', false)
+                }
+
+                for (let zhuRang in this.zhuRang2)
+                {
+                    this.$set(data, zhuRang + 'Check', false)
+                    this.$set(data, zhuRang + 'Choose', false)
+                }
+                // 清空其他
+                for (let other in this.other)
+                {
+                    this.$set(data, other + 'Choose', false)
+                }
+
+                // 清0 其他数量
+                this.$set(data, 'otherNum', 0)
+            },
+            // 显示过关
+            guanShowHide( mark ) {
+                if( mark == 'guan' )
+                {
+                    for (let item of this.freeGuan)
+                    {
+                        if( this.chooseFreeGuan.indexOf( item.value ) != -1 )
+                        {
+                            this.$set(item, 'choose', true)
+                        }else{
+                            this.$set(item, 'choose', false)
+                        }
+                    }
+
+                    for (let item of this.duoGuan)
+                    {
+                        if( this.chooseDuoGuan.indexOf( item.value ) != -1 )
+                        {
+                            this.$set(item, 'choose', true)
+                        }else{
+                            this.$set(item, 'choose', false)
+                        }
+                    }
+                }
+                this.guanShow = !this.guanShow
+                this.greyBgShow = !this.greyBgShow
+            },
+            // 点击关
+            chooseGuan(index, mark) {
+                let guan = mark == 'free' ? 'duoGuan' : 'freeGuan';
+                for (let item of this[guan])
+                {
+                    this.$set(item, 'choose', false)
+                }
+                this.$set(this[mark + 'Guan'][index], 'choose', !this[mark + 'Guan'][index]['choose'])
+            },
+            // 确定过关
+            guanConfirm() {
+                let guanWord = []
+                let chooseFreeGuan = []
+                let chooseDuoGuan = []
+
+                for ( let item of this.freeGuan )
+                {
+                    if( item.choose == true )
+                    {
+                        guanWord.push(item.name)
+                        chooseFreeGuan.push(item.value)
+                    }
+                }
+
+                for ( let item of this.duoGuan )
+                {
+                    if( item.choose == true )
+                    {
+                        guanWord.push(item.name)
+                        chooseDuoGuan.push(item.value)
+                    }
+                }
+
+                if( guanWord.length == 0 ){
+                    layer.open({
+                        content: '没有选择过关'
+                        ,skin: 'msg'
+                        ,time: 2
+                    });
+                    return false;
+                }
+
+                this.chooseFreeGuan = chooseFreeGuan
+                this.chooseDuoGuan  = chooseDuoGuan
+
+                this.guanWord = guanWord.join(',')
+
+                // 调用计算多少注(存储)， 调用计算多少钱，奖金
+                this.countZhu()
+                this.guanShowHide()
+            },
+            // 计算多少注
+            countZhu() {
+                let chooseRaceArr = []
+                let chooseRaceFree = []
+                let highArr = []
+                let lowArr2 = []
+
+                // 额外奖金计算
+                let specialArr = []
+
+                let special = {
+                    negative: {  // 让球为负数
+                        odds: ['level', 'lose', 'letWin', 'letLevel'], // 赔率
+                        match: ['letLose', 'letLose', 'win', 'win'],  // 对应
+                    },
+                    positive: {  // 让球为正数
+                        odds: ['win', 'level', 'letLevel'], // 赔率
+                        match: ['letWin', 'letWin', 'lose'],  // 对应
+                    },
+                };
+                // 是否有匹配
+                let isSpecial = 0
+
+                for (let data of this.chooseRace)
+                {
+                    let race    = []
+                    let high    = 0
+                    let low     = 99999999
+                    let highOdds    = ''
+
+                    for (let item in this.zhuRang1)
+                    {
+                        if( data[ item + 'Choose' ] == true )
+                        {
+                            let str = data.matchId + '@' + item + '@' + data[item]
+                            race.push(str)
+                            chooseRaceFree.push(str)
+
+                            if( parseFloat(data[item]) > high )
+                            {
+                                high = parseFloat(data[item]);
+                                highOdds = item
+                            }
+
+                            parseFloat(data[item]) < low && ( low = parseFloat(data[item]) )
+                        }
+                    }
+
+                    for (let item in this.zhuRang2)
+                    {
+                        if( data[ item + 'Choose' ] == true )
+                        {
+                            let str = data.matchId + '@' + item + '@' + data[item]
+                            race.push(str)
+                            chooseRaceFree.push(str)
+
+                            if( parseFloat(data[item]) > high )
+                            {
+                                high = parseFloat(data[item]);
+                                highOdds = item
+                            }
+
+                            parseFloat(data[item]) < low && ( low = parseFloat(data[item]) )
+                        }
+                    }
+
+                    for (let item in this.other)
+                    {
+                        if( data[ item + 'Choose' ] == true )
+                        {
+                            let str = data.matchId + '@' + item + '@' + data[item]
+                            race.push(str)
+                            chooseRaceFree.push(str)
+
+                            if( parseFloat(data[item]) > high )
+                            {
+                                high = parseFloat(data[item]);
+                                highOdds = item
+                            }
+
+                            parseFloat(data[item]) < low && ( low = parseFloat(data[item]) )
+                        }
+                    }
+
+                    chooseRaceArr.push(race)
+
+                    highArr.push( high )
+
+                    lowArr2.push(low)
+
+
+                    // 判断让球数为正负数，然后判断 最高赔率 选的是否在 指定的特殊赔率里， 然后再判断是否有 对应特殊赔率
+
+                    if ( data.letCount < 0 )
+                    {
+                        let index = special.negative.odds.indexOf( highOdds )
+
+                        if( index != -1 && data[ special.negative.match[ index ] + 'Choose' ] == true ) // 说明在里面/ 并所对应赔率也被选
+                        {
+                            specialArr.push( [
+                                data[ highOdds ],
+                                data[ special.negative.match[ index ] ],
+                            ] )
+
+                            isSpecial = 1;
+                        }else{
+                            specialArr.push( [ data[ highOdds ] ] )
+                        }
+                    }
+                    else if( data.letCount > 0 )
+                    {
+                        let index = special.positive.odds.indexOf( highOdds )
+
+                        if( index != -1 && data[ special.positive.match[ index ] + 'Choose' ] == true ) // 说明在里面/ 并所对应赔率也被选
+                        {
+                            specialArr.push( [
+                                data[ highOdds ],
+                                data[ special.positive.match[ index ] ],
+                            ] )
+
+                            isSpecial = 1;
+                        }else{
+                            specialArr.push( [ data[ highOdds ] ] )
+                        }
+                    }
+                }
+
+                let zhuArr = []
+                let specialZhuArr = []
+                // 自由选关
+                if( this.chooseFreeGuan.length > 0 )
+                {
+
+                    let firstFreeGuan   = ( this.chooseFreeGuan[0].split('X') )[0]
+
+                    // 排序
+                    lowArr2.sort(function (x, y) {
+                        return x-y;
+                    });
+
+                    let min = 1
+                    for (let i = 0; i < parseInt(firstFreeGuan); i++)
+                    {
+                        min *= lowArr2[i]
+                    }
+
+                    this.jiangMin = min * 2
+
+                    for (let item of this.chooseFreeGuan)
+                    {
+                        item = item.split('X')
+                        zhuArr = zhuArr.concat(
+                            createMode( chooseRaceArr, parseInt(item[0]), parseInt(item[1]) )
+                        )
+
+                        specialZhuArr = specialZhuArr.concat(
+                            createMode( specialArr, parseInt(item[0]), parseInt(item[1]) )
+                        )
+                    }
+
+                    this.zhuNum = zhuArr.length
+
+                    let lastFreeGuan    = ( this.chooseFreeGuan[ this.chooseFreeGuan.length - 1 ].split('X') )[0]
+
+                    let jiangMax = 0
+                    // 单关
+                    if( lastFreeGuan == 1 )
+                    {
+                        for (let item of highArr)
+                        {
+                            jiangMax += item
+                        }
+                    }else{
+                        // 有匹配到特殊赔率
+                        for (let item of specialZhuArr)
+                        {
+                            let lv = 1;
+                            for (let item2 of item)
+                            {
+                                lv = lv * item2
+                            }
+                            jiangMax += lv
+                        }
+                    }
+
+                    this.jiangMax = jiangMax * 2
+
+                }
+                //多串过关
+                else if( this.chooseDuoGuan.length > 0 )
+                {
+                    for (let item of this.chooseDuoGuan)
+                    {
+                        item = item.split('X')
+                        zhuArr = zhuArr.concat(
+                            createMode( chooseRaceArr, parseInt(item[0]), parseInt(item[1]) )
+                        )
+
+                        specialZhuArr = specialZhuArr.concat(
+                            createMode( specialArr, parseInt(item[0]), parseInt(item[1]) )
+                        )
+                    }
+
+                    this.zhuNum = zhuArr.length
+
+                    let peiLv = []
+                    for (let item of zhuArr)
+                    {
+                        let lv = 1;
+                        for (let item2 of item)
+                        {
+                            item2 = item2.split('@')
+                            lv = lv * item2[2]
+                        }
+                        peiLv.push(lv)
+                    }
+
+                    peiLv.sort(function (x, y) {
+                        return x-y;
+                    });
+
+                    let min = peiLv[0]
+                    let min_same = 1
+                    for ( let i = 1, len = peiLv.length; i < len; i++ )
+                    {
+                        if( peiLv[i] == min )
+                        {
+                            min_same++
+                        }else{
+                            break;
+                        }
+                    }
+
+                    this.jiangMin = peiLv.length ? min * min_same * 2 : 0
+
+                    //
+                    let jiangMax = 0
+
+                    for (let item of specialZhuArr)
+                    {
+                        let lv = 1;
+                        for (let item2 of item)
+                        {
+                            lv = lv * item2
+                        }
+                        jiangMax += lv
+                    }
+
+                    this.jiangMax = jiangMax * 2
+
+                }
+
+            },
+            // 加倍
+            addBei() {
+                let bei = this.bei + 1
+                this.bei = bei < 999 ? bei : 999
+            },
+            // 减倍
+            minusBei() {
+                let bei = this.bei - 1
+                this.bei = bei > 1 ? bei : 1
+            },
+            // 显示数字
+            numberShowHide() {
+                this.numberShow = !this.numberShow
+                this.greyBgShow = !this.greyBgShow
+            },
+            // 数字点击
+            numberPress(num) {
+                let number = this.number.toString() + num;
+                this.number = parseInt(number).toString()
+            },
+            // 清空数字
+            clearNumber() {
+                this.number = ''
+            },
+            // 退格数字
+            backNumber() {
+                let number = this.number.toString()
+                this.number = number.substr(0, number.length - 1)
+            },
+            // 确认数字
+            numberConfirm() {
+                let number = parseInt(this.number)
+                if( !number ){
+                    layer.open({
+                        content: '倍数不能为空'
+                        ,skin: 'msg'
+                        ,time: 2
+                    });
+                }else if( number > 999 ){
+                    layer.open({
+                        content: '倍数不能大于999'
+                        ,skin: 'msg'
+                        ,time: 2
+                    });
+                }else{
+
+                    this.number = ''
+                    this.bei = number
+
+                    this.numberShowHide()
+                }
+            },
+            // 计算选了多少比赛
+            countChooseRaceNum() {
+                let chooseRaceNum   = 0;
+                let chooseRace      = []
+
+                for(let data of this.baseData)
+                {
+                    let zhurang_choose = 0
+                    // 查询是否选取主让
+                    for (let zhuRang in this.zhuRang1)
+                    {
+                        if( data[ zhuRang + 'Check' ] || data[ zhuRang + 'Choose' ] )
+                        {
+                            zhurang_choose = 1;
+                            break;
+                        }
+                    }
+
+                    if( zhurang_choose == 0 )
+                    {
+                        for (let zhuRang in this.zhuRang2)
+                        {
+                            if( data[ zhuRang + 'Check' ] || data[ zhuRang + 'Choose' ] )
+                            {
+                                zhurang_choose = 1;
+                                break;
+                            }
+                        }
+                    }
+
+                    if( zhurang_choose == 1){
+                        chooseRaceNum++;
+                        chooseRace.push( data )
+                        continue;
+                    }
+
+                    // 查询是否选取其他
+                    for (let other in this.other)
+                    {
+                        if( data[ other + 'Choose' ] == true )
+                        {
+                            chooseRaceNum++;
+                            chooseRace.push( data )
+                            break;
+                        }
+                    }
+                }
+
+                this.chooseRace     = chooseRace;
+                this.chooseRaceNum  = chooseRaceNum;
+            },
+            // 复制结果
+            copyResult() {
+                let copyContent = ''
+                let jinqiu = ['0','1','2','3','4','5','6','7+']
+
+                let key = 1
+                for (let data of this.chooseRace)
+                {
+                    let race = []
+                    copyContent += '第'+ key + '场' + data.number + '\n';
+                    for (let item in this.zhuRang1)
+                    {
+                        if( data[ item + 'Choose' ] == true )
+                        {
+                            race.push(this.zhuRang1[item] + '@' + data[item])
+                        }
+                    }
+
+                    for (let item in this.zhuRang2)
+                    {
+                        if( data[ item + 'Choose' ] == true )
+                        {
+                            race.push('让' + this.zhuRang2[item] + '@' + data[item])
+                        }
+                    }
+
+                    for (let item in this.other)
+                    {
+                        if( data[ item + 'Choose' ] == true )
+                        {
+                            let qiu = jinqiu.indexOf(this.other[item]) != -1 ? '球' : '';
+                            race.push( this.other[item] + qiu + '@' + data[item])
+                        }
+                    }
+
+                    copyContent += race.join('+') + '\n'
+
+                    key++
+                }
+
+                let guan = this.chooseFreeGuan.length > 0 ? this.chooseFreeGuan : this.chooseDuoGuan
+
+                copyContent += '过关方式：' + guan.join('，') + '，' + '倍数：' + this.bei
+
+                var oInput = document.createElement("textarea");
+                oInput.value = copyContent;
+                document.body.appendChild(oInput);
+                oInput.select();
+                document.execCommand("Copy");
+                oInput.className = "oInput";
+                oInput.style.display = "none";
+                layer.open({
+                    content: '复制成功'
+                    ,skin: 'msg'
+                    ,time: 2
+                });
+
+            },
+        }
+    })
+
+    // 根据日期分组
+    function returnDateGroup(baseData, chooseLeague) {
+        let dateGroup = {}
+
+        for (let i = 0, len = baseData.length; i < len; i++) {
+            let data = baseData[i];
+            dateGroup[data.matchPeriod] = dateGroup[data.matchPeriod] || {
+                weekDay: getWeekDay(data.matchPeriod),
+                isShow: true,
+                data: []
+            };
+            // 如果有筛选赛事
+            if( chooseLeague && chooseLeague.indexOf( data.league ) != -1 ){
+
+                dateGroup[data.matchPeriod]['data'].push(data);
+
+            }else if( !chooseLeague ){
+
+                dateGroup[data.matchPeriod]['data'].push(data);
+
+            }
+        }
+
+        return dateGroup;
+    }
+
+    function formatTime(value) {
+        let date = new Date(value);
+        let y = date.getFullYear();
+        let MM = date.getMonth() + 1;
+        MM = MM < 10 ? ('0' + MM) : MM;
+        let d = date.getDate();
+        d = d < 10 ? ('0' + d) : d;
+        let h = date.getHours();
+        h = h < 10 ? ('0' + h) : h;
+        let m = date.getMinutes();
+        m = m < 10 ? ('0' + m) : m;
+        let s = date.getSeconds();
+        s = s < 10 ? ('0' + s) : s;
+        return y + '-' + MM + '-' + d;
+    }
+
+    // 提取赛事
+    function returnLeague(baseData) {
+        let league = {}
+
+        for (let i = 0, len = baseData.length; i < len; i++) {
+            let data = baseData[i];
+            league[data.league] = league[data.league] || false;
+        }
+        return league;
+    }
+
+    function getWeekDay(date) {
+        var weekArray = new Array("日", "一", "二", "三", "四", "五", "六");
+        var week = weekArray[new Date(date).getDay()];//注意此处必须是先new一个Date
+        return week;
+    }
+
+
+    /**
+     * 按照串关场数分组，3场串、4场串。。。8场串。
+     * 每组串关场次包含多个串关方式，如3串3、3串4，多个串关方式对应不同的再分组区间。
+     * [串N, Max, Min]表示比赛场次按N场分组后，每组再进行串Max分组，然后对每组进行组合；以上操作循环至Min
+     */
+    const PASS_MODE_MAP = [
+        [
+            [1, 1, 1], //1x1
+        ],
+        [
+            [1, 2, 2], //2x1
+            [3, 2, 1] //2x3
+        ],
+        [
+            [1, 3, 3], //3x1
+            [3, 2, 2], //3x3
+            [4, 3, 2] //3x4
+        ],
+        [
+            [1, 4, 4], //4x1
+            [4, 3, 3], //4x4
+            [5, 4, 3], //4x5
+            [6, 2, 2], //4x6
+            [11, 4, 2] //4x11
+        ],
+        [
+            [1, 5, 5], //5x1
+            [5, 4, 4], //5x5
+            [6, 5, 4], //5x6
+            [10, 2, 2], //5x10
+            [16, 5, 3], //5x16
+            [20, 3, 2], //5x20
+            [26, 5, 2] //5x26
+        ],
+        [
+            [1, 6, 6], //6x1
+            [6, 5, 5], //6x6
+            [7, 6, 5], //6x7
+            [15, 2, 2], //6x15
+            [20, 3, 3], //6x20
+            [22, 6, 4], //6x22
+            [35, 3, 2], //6x35
+            [42, 6, 3], //6x42
+            [50, 4, 2], //6x50
+            [57, 6, 2] //6x57
+        ],
+        [
+            [1, 7, 7], //7x1
+            [7, 6, 6], //7x7
+            [8, 7, 6], //7x8
+            [21, 5, 5], //7x21
+            [35, 4, 4], //7x35
+            [120, 7, 2] //7x120
+        ],
+        [
+            [1, 8, 8], //8x1
+            [8, 7, 7], //8x8
+            [9, 8, 7], //8x9
+            [28, 6, 6], //8x28
+            [56, 5, 5], //8x56
+            [70, 4, 4], //8x70
+            [247, 8, 2] //8x247
+        ]
+    ];
+
+    /**
+     *
+     * @param {Array} matches 投注场次
+     * @param {Number} cgCount 串关场数
+     * @param {Number} cgMode 串关方式
+     */
+    function createMode (matches, cgCount, cgMode){
+    // export default function createMode (matches, cgCount, cgMode){
+        let cgroup = PASS_MODE_MAP[cgCount-1];
+        let range = [];
+
+        for(let i=0,len=cgroup.length; i<len; i++){
+            if(cgroup[i][0] === cgMode){
+                range = cgroup[i].slice(1);
+                break;
+            }
+        }
+
+        let ret = CS(matches, cgCount);//按照串关场数进行组合
+        let total = [];//串关结果
+        let [max, min] = range;
+
+        //遍历组合，生成串关方式
+        for(let j=0, jen=ret.length; j<jen; j++){
+            //遍历串关方式对应的分组区间
+            for(let k=min; k<=max; k++){
+                let partial = CS(ret[j], k);
+
+                //遍历最终的分组，进行每组元素中每场比赛选项的混合，如有三场比赛，则从每场比赛中选一个选项
+                for(let p=0, pen=partial.length; p<pen; p++){
+                    let grp = mix(partial[p], partial[p].length);
+                    total = total.concat(grp);
+                    // total = total.concat("|");
+                }
+            }
+        }
+
+        return total;
+    }
+
+    //计算total场比赛的排列组合
+    function CS(total, num, i=0, concat) {
+        let len = total.length,
+            ret = [];
+
+        for(let len=total.length; i<len; i++){
+            let rest = concat ? [].concat(concat, [total[i]]) : [total[i]];
+
+            if(num > 1){
+                ret = ret.concat(CS(total, num-1, i+1, rest) );
+            }else{
+                ret.push(rest);
+            }
+        }
+
+        return ret;
+    }
+
+    //遍历每组比赛，取每场比赛的一个选项进行组合
+    function mix(list, limit, idx=0, concat) {
+        let ret=[];
+
+        for(let i=0,len=list[idx].length; i<len; i++){
+            let rest = concat ? concat.concat(list[idx][i]) : [list[idx][i]];
+            if(limit>1){
+                ret = ret.concat(mix(list, limit-1, idx+1, rest));
+            }else{
+                ret.push(rest);
+            }
+        }
+
+        return ret;
+    }
+
+</script>
+</body>
+</html>
