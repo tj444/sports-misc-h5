@@ -92,9 +92,9 @@
                 </div>
             </div>
         </div>
-        <div class="layui-footer">
+        <div class="layui-footer" :style="{'padding-bottom':newIphone}">
             <div class="checknum">已选择{{ chooseRaceNum }}场比赛</div>
-            <button type="button" class="layui-btn layui-btn-danger layui-btn-sm" @click="chooseResultShowHide('tou')">投注</button>
+            <button type="button" class="layui-btn layui-btn-danger layui-btn-sm" @click="chooseResultShowHide('tou')">投 注</button>
         </div>
     </div>
 
@@ -166,17 +166,25 @@
                         </div>
                         <div class="layui-col-xs1"></div>
                     </div>
-                    <div class="other">
+                    <div class="layui-row score"
+                         v-for="item2 in item.otherChoose">
+                        <div class="layui-col-xs2">
+                        </div>
                         <div class="layui-col-xs3 layui-bg-red"
-                             v-for="(item2, index2) in other" v-show="item[index2 + 'Choose']">
-                            <span>{{ item2 }}</span>
-                            <span>{{ item[index2] }}</span>
+                             v-for="item3 in item2">
+                            <span>{{ other[item3] }}</span>
+                            <span>{{ item[item3] }}</span>
+                        </div>
+                        <div class="layui-col-xs3"
+                             v-for="i of 3-item2.length" style="border: none">
+                        </div>
+                        <div class="layui-col-xs1">
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="layui-footer">
+        <div class="layui-footer" :style="{'padding-bottom':newIphone}">
             <div class="layui-row guanbei">
                 <div class="layui-col-xs5 guan" @click="guanShowHide('guan')">
                     <p>{{ guanWord }}</p>
@@ -198,7 +206,6 @@
             <div class="bottom">
                 <p class="layui-col-xs8 bottom">点击复制订单按钮，微信中<br>找到店主，长按输入框粘贴并发送</p>
                 <div class="layui-col-xs4 copy layui-bg-red" @click="copyResult">复制订单</div>
-                <input type="hidden" id="copycontent" v-model="copyContent">
             </div>
         </div>
     </div>
@@ -305,17 +312,17 @@
                     <tr>
                         <td class="layui-bg layui-bg-gray">0</td>
                         <td :class="{'layui-bg-red' : moreData.winChoose == true}"
-                            @click="chooseScoreMore('winChoose')" v-show="moreData.win">
+                            @click="chooseScoreMoreS('winChoose')" v-show="moreData.win">
                             <span>胜</span>
                             <span>{{ moreData.win }}</span>
                         </td>
                         <td :class="{'layui-bg-red' : moreData.levelChoose == true}"
-                            @click="chooseScoreMore('levelChoose')" v-show="moreData.win">
+                            @click="chooseScoreMoreS('levelChoose')" v-show="moreData.win">
                             <span>平</span>
                             <span>{{ moreData.level }}</span>
                         </td>
                         <td :class="{'layui-bg-red' : moreData.loseChoose == true}"
-                            @click="chooseScoreMore('loseChoose')" v-show="moreData.win">
+                            @click="chooseScoreMoreS('loseChoose')" v-show="moreData.win">
                             <span>负</span>
                             <span>{{ moreData.lose }}</span>
                         </td>
@@ -326,17 +333,17 @@
                     <tr>
                         <td class="layui-bg layui-bg-blue">{{ moreData.letCount }}</td>
                         <td :class="{'layui-bg-red' : moreData.letWinChoose == true}"
-                            @click="chooseScoreMore('letWinChoose')" v-show="moreData.letWin">
+                            @click="chooseScoreMoreS('letWinChoose')" v-show="moreData.letWin">
                             <span>胜</span>
                             <span>{{ moreData.letWin }}</span>
                         </td>
                         <td :class="{'layui-bg-red' : moreData.letLevelChoose == true}"
-                            @click="chooseScoreMore('letLevelChoose')" v-show="moreData.letWin">
+                            @click="chooseScoreMoreS('letLevelChoose')" v-show="moreData.letWin">
                             <span>平</span>
                             <span>{{ moreData.letLevel }}</span>
                         </td>
                         <td :class="{'layui-bg-red' : moreData.letLoseChoose == true}"
-                            @click="chooseScoreMore('letLoseChoose')" v-show="moreData.letWin">
+                            @click="chooseScoreMoreS('letLoseChoose')" v-show="moreData.letWin">
                             <span>负</span>
                             <span>{{ moreData.letLose }}</span>
                         </td>
@@ -351,71 +358,71 @@
                 <table class="layui-table">
                     <tr>
                         <td rowspan="3" class="layui-bg layui-bg-red">主胜</td>
-                        <td :class="{'layui-bg-red' : moreData.oneToZeroChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.oneToZeroChoose == true}"
                             @click="chooseScoreMore('oneToZeroChoose')">
                             <span>1:0</span>
                             <span>{{ moreData.oneToZero }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.twoToZeroChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.twoToZeroChoose == true}"
                             @click="chooseScoreMore('twoToZeroChoose')">
                             <span>2:0</span>
                             <span>{{ moreData.twoToZero }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.twoToOneChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.twoToOneChoose == true}"
                             @click="chooseScoreMore('twoToOneChoose')">
                             <span>2:1</span>
                             <span>{{ moreData.twoToOne }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.threeToZeroChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.threeToZeroChoose == true}"
                             @click="chooseScoreMore('threeToZeroChoose')">
                             <span>3:0</span>
                             <span>{{ moreData.threeToZero }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.threeToOneChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.threeToOneChoose == true}"
                             @click="chooseScoreMore('threeToOneChoose')">
                             <span>3:1</span>
                             <span>{{ moreData.threeToOne }}</span>
                         </td>
                     </tr>
                     <tr>
-                        <td :class="{'layui-bg-red' : moreData.threeToTwoChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.threeToTwoChoose == true}"
                             @click="chooseScoreMore('threeToTwoChoose')">
                             <span>3:2</span>
                             <span>{{ moreData.threeToTwo }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.fourToZeroChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.fourToZeroChoose == true}"
                             @click="chooseScoreMore('fourToZeroChoose')">
                             <span>4:0</span>
                             <span>{{ moreData.fourToZero }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.fourToOneChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.fourToOneChoose == true}"
                             @click="chooseScoreMore('fourToOneChoose')">
                             <span>4:1</span>
                             <span>{{ moreData.fourToOne }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.fourToTwoChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.fourToTwoChoose == true}"
                             @click="chooseScoreMore('fourToTwoChoose')">
                             <span>4:2</span>
                             <span>{{ moreData.fourToTwo }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.fiveToZeroChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.fiveToZeroChoose == true}"
                             @click="chooseScoreMore('fiveToZeroChoose')">
                             <span>5:0</span>
                             <span>{{ moreData.fiveToZero }}</span>
                         </td>
                     </tr>
                     <tr>
-                        <td :class="{'layui-bg-red' : moreData.fiveToOneChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.fiveToOneChoose == true}"
                             @click="chooseScoreMore('fiveToOneChoose')">
                             <span>5:1</span>
                             <span>{{ moreData.fiveToOne }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.fiveToTwoChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.fiveToTwoChoose == true}"
                             @click="chooseScoreMore('fiveToTwoChoose')">
                             <span>5:2</span>
                             <span>{{ moreData.fiveToTwo }}</span>
                         </td>
-                        <td colspan="100" :class="{'layui-bg-red' : moreData.winOtherChoose == true}"
+                        <td colspan="100" :class="{'layui-bg-red' : moreDataChooseTem.winOtherChoose == true}"
                             @click="chooseScoreMore('winOtherChoose')">
                             <span>胜其他</span>
                             <span>{{ moreData.winOther }}</span>
@@ -425,27 +432,27 @@
                 <table class="layui-table">
                     <tr>
                         <td rowspan="3" class="layui-bg layui-bg-green">平</td>
-                        <td :class="{'layui-bg-red' : moreData.zeroToZeroChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.zeroToZeroChoose == true}"
                             @click="chooseScoreMore('zeroToZeroChoose')">
                             <span>0:0</span>
                             <span>{{ moreData.zeroToZero }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.oneToOneChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.oneToOneChoose == true}"
                             @click="chooseScoreMore('oneToOneChoose')">
                             <span>1:1</span>
                             <span>{{ moreData.oneToOne }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.twoToTwoChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.twoToTwoChoose == true}"
                             @click="chooseScoreMore('twoToTwoChoose')">
                             <span>2:2</span>
                             <span>{{ moreData.twoToTwo }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.threeToThreeChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.threeToThreeChoose == true}"
                             @click="chooseScoreMore('threeToThreeChoose')">
                             <span>3:3</span>
                             <span>{{ moreData.threeToThree }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.levelOtherChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.levelOtherChoose == true}"
                             @click="chooseScoreMore('levelOtherChoose')">
                             <span>平其他</span>
                             <span>{{ moreData.levelOther }}</span>
@@ -455,71 +462,71 @@
                 <table class="layui-table">
                     <tr>
                         <td rowspan="3" class="layui-bg layui-bg-blue">主负</td>
-                        <td :class="{'layui-bg-red' : moreData.zeroToOneChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.zeroToOneChoose == true}"
                             @click="chooseScoreMore('zeroToOneChoose')">
                             <span>0:1</span>
                             <span>{{ moreData.zeroToOne }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.zeroToTwoChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.zeroToTwoChoose == true}"
                             @click="chooseScoreMore('zeroToTwoChoose')">
                             <span>0:2</span>
                             <span>{{ moreData.zeroToTwo }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.zeroToThreeChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.zeroToThreeChoose == true}"
                             @click="chooseScoreMore('zeroToThreeChoose')">
                             <span>0:3</span>
                             <span>{{ moreData.zeroToThree }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.zeroToFourChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.zeroToFourChoose == true}"
                             @click="chooseScoreMore('zeroToFourChoose')">
                             <span>0:4</span>
                             <span>{{ moreData.zeroToFour }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.zeroToFiveChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.zeroToFiveChoose == true}"
                             @click="chooseScoreMore('zeroToFiveChoose')">
                             <span>0:5</span>
                             <span>{{ moreData.zeroToFive }}</span>
                         </td>
                     </tr>
                     <tr>
-                        <td :class="{'layui-bg-red' : moreData.oneToTwoChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.oneToTwoChoose == true}"
                             @click="chooseScoreMore('oneToTwoChoose')">
                             <span>1:2</span>
                             <span>{{ moreData.oneToTwo }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.oneToThreeChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.oneToThreeChoose == true}"
                             @click="chooseScoreMore('oneToThreeChoose')">
                             <span>1:3</span>
                             <span>{{ moreData.oneToThree }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.oneToFourChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.oneToFourChoose == true}"
                             @click="chooseScoreMore('oneToFourChoose')">
                             <span>1:4</span>
                             <span>{{ moreData.oneToFour }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.oneToFiveChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.oneToFiveChoose == true}"
                             @click="chooseScoreMore('oneToFiveChoose')">
                             <span>1:5</span>
                             <span>{{ moreData.oneToFive }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.twoToThreeChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.twoToThreeChoose == true}"
                             @click="chooseScoreMore('twoToThreeChoose')">
                             <span>2:3</span>
                             <span>{{ moreData.twoToThree }}</span>
                         </td>
                     </tr>
                     <tr>
-                        <td :class="{'layui-bg-red' : moreData.twoToFourChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.twoToFourChoose == true}"
                             @click="chooseScoreMore('twoToFourChoose')">
                             <span>2:4</span>
                             <span>{{ moreData.twoToFour }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.twoToFiveChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.twoToFiveChoose == true}"
                             @click="chooseScoreMore('twoToFiveChoose')">
                             <span>2:5</span>
                             <span>{{ moreData.twoToFive }}</span>
                         </td>
-                        <td colspan="100" :class="{'layui-bg-red' : moreData.loseOtherChoose == true}"
+                        <td colspan="100" :class="{'layui-bg-red' : moreDataChooseTem.loseOtherChoose == true}"
                             @click="chooseScoreMore('loseOtherChoose')">
                             <span>负其他</span>
                             <span>{{ moreData.loseOther }}</span>
@@ -532,44 +539,44 @@
                 <table class="layui-table">
                     <tr>
                         <td rowspan="2" class="layui-bg layui-bg-red">进球数</td>
-                        <td :class="{'layui-bg-red' : moreData.zeroChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.zeroChoose == true}"
                             @click="chooseScoreMore('zeroChoose')">
                             <span>0</span>
                             <span>{{ moreData.zero }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.oneChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.oneChoose == true}"
                             @click="chooseScoreMore('oneChoose')">
                             <span>1</span>
                             <span>{{ moreData.one }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.twoChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.twoChoose == true}"
                             @click="chooseScoreMore('twoChoose')">
                             <span>2</span>
                             <span>{{ moreData.two }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.threeChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.threeChoose == true}"
                             @click="chooseScoreMore('threeChoose')">
                             <span>3</span>
                             <span>{{ moreData.three }}</span>
                         </td>
                     </tr>
                     <tr>
-                        <td :class="{'layui-bg-red' : moreData.fourChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.fourChoose == true}"
                             @click="chooseScoreMore('fourChoose')">
                             <span>4</span>
                             <span>{{ moreData.four }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.fiveChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.fiveChoose == true}"
                             @click="chooseScoreMore('fiveChoose')">
                             <span>5</span>
                             <span>{{ moreData.five }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.sixChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.sixChoose == true}"
                             @click="chooseScoreMore('sixChoose')">
                             <span>6</span>
                             <span>{{ moreData.six }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.sevenChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.sevenChoose == true}"
                             @click="chooseScoreMore('sevenChoose')">
                             <span>7+</span>
                             <span>{{ moreData.seven }}</span>
@@ -582,51 +589,51 @@
                 <table class="layui-table">
                     <tr>
                         <td rowspan="3" class="layui-bg layui-bg-blue">半全场</td>
-                        <td :class="{'layui-bg-red' : moreData.winWinChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.winWinChoose == true}"
                             @click="chooseScoreMore('winWinChoose')">
                             <span>胜-胜</span>
                             <span>{{ moreData.winWin }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.winLevelChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.winLevelChoose == true}"
                             @click="chooseScoreMore('winLevelChoose')">
                             <span>胜-平</span>
                             <span>{{ moreData.winLevel }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.winLoseChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.winLoseChoose == true}"
                             @click="chooseScoreMore('winLoseChoose')">
                             <span>胜-负</span>
                             <span>{{ moreData.winLose }}</span>
                         </td>
                     </tr>
                     <tr>
-                        <td :class="{'layui-bg-red' : moreData.levelWinChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.levelWinChoose == true}"
                             @click="chooseScoreMore('levelWinChoose')">
                             <span>平-胜</span>
                             <span>{{ moreData.levelWin }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.levelLevelChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.levelLevelChoose == true}"
                             @click="chooseScoreMore('levelLevelChoose')">
                             <span>平-平</span>
                             <span>{{ moreData.levelLevel }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.levelLoseChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.levelLoseChoose == true}"
                             @click="chooseScoreMore('levelLoseChoose')">
                             <span>平-负</span>
                             <span>{{ moreData.levelLose }}</span>
                         </td>
                     </tr>
                     <tr>
-                        <td :class="{'layui-bg-red' : moreData.loseWinChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.loseWinChoose == true}"
                             @click="chooseScoreMore('loseWinChoose')">
                             <span>负-胜</span>
                             <span>{{ moreData.loseWin }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.loseLevelChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.loseLevelChoose == true}"
                             @click="chooseScoreMore('loseLevelChoose')">
                             <span>负-平</span>
                             <span>{{ moreData.loseLevel }}</span>
                         </td>
-                        <td :class="{'layui-bg-red' : moreData.loseLoseChoose == true}"
+                        <td :class="{'layui-bg-red' : moreDataChooseTem.loseLoseChoose == true}"
                             @click="chooseScoreMore('loseLoseChoose')">
                             <span>负-负</span>
                             <span>{{ moreData.loseLose }}</span>
@@ -653,6 +660,12 @@
 <!--<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>-->
 <script src="js/axios.min.js"></script>
 <script>
+    function testUA (str) {
+        return navigator.userAgent.indexOf(str) > -1
+    }
+    // 判断是iphoneX及以后的iphone手机（即iphone带全面屏的手机）
+    var isNewIphone = window && testUA('iPhone') && window.screen.height >= 812 && window.devicePixelRatio >= 2;
+
     let vm = new Vue({
         el: "#app",
         data: {
@@ -723,7 +736,7 @@
                 'twoToThree': '2:3',
                 'twoToFour': '2:4',
                 'twoToFive': '2:5',
-                'lostOther': '负其他',
+                'loseOther': '负其他',
                 // 进球数
                 'zero': '0',
                 'one': '1',
@@ -799,6 +812,74 @@
             jiangMin: 0,
             jiangMax: 0,
             copyContent: '',
+            newIphone: '0',
+            moreDataChooseTem: {},
+            play: [
+                [   // 胜平负
+                    'win',
+                    'level',
+                    'lose',
+                ],
+                [   // 让球胜平负
+                    'letWin',
+                    'letLevel',
+                    'letLose',
+                ],
+                [   // 比分
+                    'oneToZero',
+                    'twoToZero',
+                    'twoToOne',
+                    'threeToZero',
+                    'threeToOne',
+                    'threeToTwo',
+                    'fourToZero',
+                    'fourToOne',
+                    'fourToTwo',
+                    'fiveToZero',
+                    'fiveToOne',
+                    'fiveToTwo',
+                    'winOther',
+                    'zeroToZero',
+                    'oneToOne',
+                    'twoToTwo',
+                    'threeToThree',
+                    'levelOther',
+                    'zeroToOne',
+                    'zeroToTwo',
+                    'zeroToThree',
+                    'zeroToFour',
+                    'zeroToFive',
+                    'oneToTwo',
+                    'oneToThree',
+                    'oneToFour',
+                    'oneToFive',
+                    'twoToThree',
+                    'twoToFour',
+                    'twoToFive',
+                    'loseOther',
+                ],
+                [   // 进球数
+                    'zero',
+                    'one',
+                    'two',
+                    'three',
+                    'four',
+                    'five',
+                    'six',
+                    'seven',
+                ],
+                [   // 半全场
+                    'winWin',
+                    'winLevel',
+                    'winLose',
+                    'levelWin',
+                    'levelLevel',
+                    'levelLose',
+                    'loseWin',
+                    'loseLevel',
+                    'loseLose',
+                ],
+            ],
         },
         filters: {
             formatTime: function (value) {
@@ -833,7 +914,10 @@
             }
         },
         mounted() {
+            this.newIphone = isNewIphone ? '20px' : '0';
+
             axios.get("http://api.tc.jiedaimarket.cn/match/getFootball")
+            // axios.get("./js/race.json")
                 .then(response => {
                     this.baseData       = response.data
                     this.dateGroupData  = returnDateGroup(response.data)
@@ -927,12 +1011,20 @@
             },
             // 修改比赛
             editRace(index) {
+                this.moreDataChooseTem = {}
+
+                for(let other in this.other)
+                {
+                    if( this.chooseRace[index][ other + 'Choose' ] == true )
+                    {
+                        this.$set( this.moreDataChooseTem, other + 'Choose', true)
+                    }
+                }
+
                 this.moreData = this.chooseRace[index]
 
                 this.moreShow = !this.moreShow
                 this.greyBgShow = !this.greyBgShow
-
-                this.chooseResultShowHide()
             },
             // 显示比赛
             showHideRace(index, showhide) {
@@ -946,6 +1038,7 @@
             // 显示更多选项
             showHideMore(index, index2) {
                 if( !isNaN(index2) ){
+
                     let data = this.dateGroupData[index]['data'][index2]
 
                     for(let zhuRang in this.zhuRang1) {
@@ -964,10 +1057,25 @@
                         }
                     }
 
+                    this.moreDataChooseTem = {}
+
+                    for(let other in this.other)
+                    {
+                        if( data[ other + 'Choose' ] == true )
+                        {
+                            this.$set( this.moreDataChooseTem, other + 'Choose', true)
+                        }
+                    }
+
                     data['key'] = {index: index, index2: index2}
                     this.moreData = data
                 }
+
                 $(".match-score").scrollTop(0)
+
+                if( this.moreShow ){
+                    this.moreDataChooseTem = {}
+                }
 
                 this.moreShow = !this.moreShow
                 this.greyBgShow = !this.greyBgShow
@@ -994,13 +1102,47 @@
                 }
 
                 for(let other in this.other) {
-                    if( data[ other + 'Choose' ] == true ){
+                    if( this.moreDataChooseTem[ other + 'Choose' ] == true ){
+                        this.$set( data, other + 'Choose', true)
                         otherNum++
+                    }else{
+                        this.$set( data, other + 'Choose', false)
                     }
                 }
+                this.moreDataChooseTem = {}
                 this.$set( data, 'otherNum', otherNum)
 
+                let otherChoose = []
+
+                let m = 0
+                let temArr = []
+                for (let item in this.other)
+                {
+
+                    if( data[ item + 'Choose' ] == true )
+                    {
+
+                        if( m%3 == 0 )
+                        {
+                            temArr = []
+                        }
+
+                        temArr.push( item )
+
+                        otherChoose[ Math.floor(m/3) ] = temArr;
+
+                        m++
+                    }
+                }
+
+                this.$set( data, 'otherChoose', otherChoose )
+
+
+
                 this.countChooseRaceNum()
+
+                // 调用计算多少注(存储)， 调用计算多少钱，奖金
+                this.countZhu()
 
                 this.moreShow = !this.moreShow
                 this.greyBgShow = !this.greyBgShow
@@ -1042,14 +1184,142 @@
             },
             // 选择比分
             chooseScore(index, index2, field) {
-                this.$set( this.dateGroupData[index]['data'][index2], field + 'Check', !this.dateGroupData[index]['data'][index2][field + 'Check'])
-                this.$set( this.dateGroupData[index]['data'][index2], field + 'Choose', !this.dateGroupData[index]['data'][index2][field + 'Choose'])
+                let thisPlayIndex = this._getThisPlay(field)
+                // 判断其他玩法有没被选(other-Choose)
+                let isOtherCheck = 0
+                outer:
+                for (let i in this.play)
+                {
+                    if( i != thisPlayIndex ){
+                        for (let i2 in this.play[ i ] )
+                        {
+                            if( this.dateGroupData[index]['data'][index2][ this.play[ i ][ i2 ] + 'Choose' ] == true )
+                            {
+                                isOtherCheck = 1;
+                                break outer;
+                            }
+                        }
+                    }
+                }
 
-                this.countChooseRaceNum()
+                if( isOtherCheck == 1 ) // 有其他玩法已选
+                {
+                    layer.open({
+                        content: '一场比赛只能选择一种玩法'
+                        ,skin: 'msg'
+                        ,time: 2
+                    });
+                }else{
+                    this.$set( this.dateGroupData[index]['data'][index2], field + 'Check', !this.dateGroupData[index]['data'][index2][field + 'Check'])
+                    this.$set( this.dateGroupData[index]['data'][index2], field + 'Choose', !this.dateGroupData[index]['data'][index2][field + 'Choose'])
+
+                    this.countChooseRaceNum()
+                }
+            },
+            // 更多选项 // 胜平负
+            chooseScoreMoreS(field) {
+                let thisPlayIndex = this._getThisPlay(field.replace('Choose', ''))
+                // 判断其他玩法有没被选(Choose)Tem(Choose)
+                let isOtherCheck = 0
+                outer:
+                for (let i in this.play)
+                {
+                    if( i != thisPlayIndex ){
+                        if( i < 2 )  // 胜平负/让球胜平负
+                        {
+                            for (let i2 in this.play[ i ] )
+                            {
+                                if( this.moreData[ this.play[ i ][ i2 ] + 'Choose' ] == true )
+                                {
+                                    isOtherCheck = 1;
+                                    break outer;
+                                }
+                            }
+                        }else{  // 其他玩法
+
+                            for (let i2 in this.play[ i ] )
+                            {
+                                if( this.moreDataChooseTem[ this.play[ i ][ i2 ] + 'Choose' ] == true )
+                                {
+                                    isOtherCheck = 1;
+                                    break outer;
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+                if( isOtherCheck == 1 ) // 有其他玩法已选
+                {
+                    layer.open({
+                        content: '一场比赛只能选择一种玩法'
+                        ,skin: 'msg'
+                        ,time: 2
+                    });
+                }else{
+                    this.$set( this.moreData, field, !this.moreData[field])
+                }
             },
             // 更多选项
             chooseScoreMore(field) {
-                this.$set( this.moreData, field, !this.moreData[field])
+
+                let thisPlayIndex = this._getThisPlay(field.replace('Choose', ''))
+                // 判断其他玩法有没被选(Choose)(ChooseTem)
+                let isOtherCheck = 0
+                outer:
+                for (let i in this.play)
+                {
+                    if( i != thisPlayIndex ){
+                        if( i < 2 )  // 胜平负/让球胜平负
+                        {
+                            for (let i2 in this.play[ i ] )
+                            {
+                                if( this.moreData[ this.play[ i ][ i2 ] + 'Choose' ] == true )
+                                {
+                                    isOtherCheck = 1;
+                                    break outer;
+                                }
+                            }
+                        }else{  // 其他玩法
+
+                            for (let i2 in this.play[ i ] )
+                            {
+                                if( this.moreDataChooseTem[ this.play[ i ][ i2 ] + 'Choose' ] == true )
+                                {
+                                    isOtherCheck = 1;
+                                    break outer;
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+                if( isOtherCheck == 1 ) // 有其他玩法已选
+                {
+                    layer.open({
+                        content: '一场比赛只能选择一种玩法'
+                        ,skin: 'msg'
+                        ,time: 2
+                    });
+                }else {
+                    this.$set(this.moreDataChooseTem, field, !this.moreDataChooseTem[field])
+                }
+            },
+            // 获取当前玩法
+            _getThisPlay(field){
+                for (let index in this.play)
+                {
+                    for (let index2 in this.play[ index ] )
+                    {
+                        if( field == this.play[ index ][ index2 ] )
+                        {
+                            // 返回当前玩法下标
+                            return index
+                        }
+                    }
+                }
             },
             // 投注 / 返回 / 添加赛事
             chooseResultShowHide(mark) {
@@ -1106,6 +1376,30 @@
                             }
                         }
 
+                        let otherChoose = []
+
+                        let m = 0
+                        let temArr = []
+                        for (let item in this.other)
+                        {
+
+                            if( data[ item + 'Choose' ] == true )
+                            {
+
+                                if( m%3 == 0 )
+                                {
+                                    temArr = []
+                                }
+
+                                temArr.push( item )
+
+                                otherChoose[ Math.floor(m/3) ] = temArr;
+
+                                m++
+                            }
+                        }
+
+                        this.$set( data, 'otherChoose', otherChoose )
                     }
                 }
                 document.documentElement.scrollTop = 0;
@@ -1688,17 +1982,37 @@
             copyResult() {
                 let copyContent = ''
                 let jinqiu = ['0','1','2','3','4','5','6','7+']
+                let playName = ['胜平负','让球胜平负','比分','进球数','半全场']
 
-                let key = 1
+                let playIndex, samePlay = 1;
+
                 for (let data of this.chooseRace)
                 {
+
+                    for ( let index in this.play )
+                    {
+
+                        for ( let index2 in this.play[ index ] )
+                        {
+                            if( data[ this.play[ index ][ index2 ] + 'Choose' ] == true )
+                            {
+                                if( isNaN( playIndex ) )
+                                {
+                                    playIndex = index
+                                }else if ( index != playIndex ) {
+                                    samePlay = 0
+                                }
+                            }
+                        }
+                    }
+
                     let race = []
-                    copyContent += '第'+ key + '场' + data.number + '\n';
+                    copyContent += data.number + ' ';
                     for (let item in this.zhuRang1)
                     {
                         if( data[ item + 'Choose' ] == true )
                         {
-                            race.push(this.zhuRang1[item] + '@' + data[item])
+                            race.push(this.zhuRang1[item])
                         }
                     }
 
@@ -1706,7 +2020,7 @@
                     {
                         if( data[ item + 'Choose' ] == true )
                         {
-                            race.push('让' + this.zhuRang2[item] + '@' + data[item])
+                            race.push('让' + this.zhuRang2[item])
                         }
                     }
 
@@ -1715,23 +2029,23 @@
                         if( data[ item + 'Choose' ] == true )
                         {
                             let qiu = jinqiu.indexOf(this.other[item]) != -1 ? '球' : '';
-                            race.push( this.other[item] + qiu + '@' + data[item])
+                            race.push( this.other[item] + qiu)
                         }
                     }
 
                     copyContent += race.join('+') + '\n'
-
-                    key++
                 }
 
-                let guan = this.chooseFreeGuan.length > 0 ? this.chooseFreeGuan : this.chooseDuoGuan
+                copyContent = '竞彩足球' + ( samePlay == 1 ? playName[ playIndex ] : '混合过关' ) + '\n' + copyContent;
 
-                copyContent += '过关方式：' + guan.join('，') + '，' + '倍数：' + this.bei
+                copyContent += this.guanWord + '\n' + this.bei + '倍';
 
                 var oInput = document.createElement("textarea");
                 oInput.value = copyContent;
                 document.body.appendChild(oInput);
                 oInput.select();
+                // 禁止手机键盘弹出
+                document.activeElement.blur();
                 document.execCommand("Copy");
                 oInput.className = "oInput";
                 oInput.style.display = "none";

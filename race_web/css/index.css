@@ -19,7 +19,7 @@ body{
 /* 头部 */
 .layui-header{
     width: 100%;
-    height: 40px;
+    height: 45px;
     position: fixed;
     top: 0;
     display: flex;
@@ -57,7 +57,7 @@ body{
 
 /* 中间 */
 .layui-container{
-    margin-top: 40px;
+    margin-top: 45px;
     margin-bottom: 65px;
     color: #444444;
     font-size: 12px;
@@ -108,7 +108,7 @@ body{
 }
 
 .layui-col-xs12{
-    margin-top: 15px;
+    margin-top: 7px;
     background-color: white;
     display: flex;
     align-items: center;
@@ -136,6 +136,7 @@ body{
     display: flex;
     justify-content: space-between;
     padding: 10px 10px 10px 55px;
+    font-size: 16px;
 }
 
 .race-data{
@@ -203,7 +204,9 @@ body{
 
 .layui-footer .layui-btn{
     margin-right: 15px;
-    width: 80px;
+    width: 100px;
+    height: 35px;
+    font-size: 14px;
 }
 
 
@@ -251,6 +254,7 @@ body{
     justify-content: space-around;
     border-top: 1px solid #b6b6b6;
     color: #848484;
+    font-weight: 500;
 }
 
 .confirm div{
@@ -273,6 +277,7 @@ body{
 
 .more-check .match-vs{
     display: flex;
+    font-size: 16px;
     width: 100%;
     padding: 10px 0;
     justify-content: space-around;
@@ -376,7 +381,7 @@ body{
 }
 
 .choose-result .layui-container .result-list .race-result .layui-row h5{
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .choose-result .layui-container .result-list .race-result .head{
@@ -515,6 +520,7 @@ body{
 /* 选择过关 */
 
 .choose-guan{
+    width: 80%;
     padding-top: 10px;
 }
 
@@ -528,7 +534,7 @@ body{
     width: 20%;
     height: 30px;
     border: 1px solid #b6b6b6;
-    margin-left: 2.5vw;
+    margin-left: 2.7vw;
     margin-bottom: 10px;
     text-align: center;
     line-height: 30px;
@@ -538,6 +544,7 @@ body{
 
 /** 选择倍数 **/
 .number{
+    width: 80%;
     padding-top: 10px;
 }
 
@@ -559,7 +566,7 @@ body{
     width: 29%;
     height: 35px;
     border: 1px solid #b6b6b6;
-    margin-left: 2vw;
+    margin-left: 1.6vw;
     margin-bottom: 10px;
     text-align: center;
     line-height: 35px;
@@ -568,6 +575,9 @@ body{
 }
 
 /* 清空重选 */
+.clear-confirm{
+    width: 65%;
+}
 .clear-confirm .content{
     padding: 20px;
     text-align: center;
