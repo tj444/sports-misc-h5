@@ -2044,9 +2044,9 @@
                 oInput.value = copyContent;
                 document.body.appendChild(oInput);
                 oInput.select();
+                document.execCommand("Copy");
                 // 禁止手机键盘弹出
                 document.activeElement.blur();
-                document.execCommand("Copy");
                 oInput.className = "oInput";
                 oInput.style.display = "none";
                 layer.open({
