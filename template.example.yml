@@ -65,3 +65,22 @@ Resources:
           Properties: 
             CronExpression: "0 10 0 * * *"  # 每天早上 8:10 抓取当天的售卖时间
             Enable: true
+    resultCrawler:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: resultCrawler.handler
+        Runtime: python3
+        Timeout: 60
+        MemorySize: 512
+        CodeUri: functions/src
+        EnvironmentVariables:
+          ALIYUN_AK: ALIYUN_AK_XXXXX
+          ALIYUN_SK: ALIYUN_SK_XXXXX
+      Events:
+        TmTrigger:
+          Type: Timer
+          Properties:
+            CronExpression: 0 0 22 * * *  # 每天早上 6:00 抓取前一天的赛果
+            Enable: true
+
+        
