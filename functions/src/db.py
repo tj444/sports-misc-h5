@@ -31,6 +31,7 @@ def getConnection():
       user=getDbConfig()['username'],
       passwd=getDbConfig()['password'],
       db=getDbConfig()['name'],
+      cursorclass=pymysql.cursors.DictCursor,
       connect_timeout=5)
     return conn
   except Exception as e:

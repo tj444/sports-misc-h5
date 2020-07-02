@@ -22,8 +22,6 @@ def handler(event, context):
       dbResult = cursor.fetchone()
       if dbResult != None:
         now = datetime.datetime.timestamp(datetime.datetime.now()) * 1000
-        logger.info(type(dbResult))
-        logger.info(dbResult)
         startTime = dbResult['startTime']
         stopTime = dbResult['stopTime']
         if startTime > now or stopTime < now:
@@ -41,6 +39,7 @@ def handler(event, context):
     h = hashlib.sha256()
     h.update(resultText.encode())
     sha256 = h.hexdigest()
+    logger.info('sha256: ' + sha256)
 
     # 赛事数据没有更新的话直接结束
     with conn.cursor() as cursor:

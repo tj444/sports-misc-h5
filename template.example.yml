@@ -17,7 +17,7 @@ Resources:
       Properties:
         Handler: index.handler
         Runtime: python3
-        Timeout: 60
+        Timeout: 600
         MemorySize: 512
         CodeUri: functions/crawler
         EnvironmentVariables:
@@ -26,8 +26,8 @@ Resources:
       Events:
         TmTrigger:
           Type: Timer
-          Properties: 
-            CronExpression: "0 0/5 * * * *"  # 每隔 5 分钟抓取赛事数据
+          Properties:
+            CronExpression: 0 0/5 * * * *
             Enable: true
     apiMatchGetFootball:
       Type: 'Aliyun::Serverless::Function'
@@ -51,24 +51,7 @@ Resources:
     timeCrawler:
       Type: 'Aliyun::Serverless::Function'
       Properties:
-        Handler: index.handler
-        Runtime: python3
-        Timeout: 60
-        MemorySize: 512
-        CodeUri: functions/timeCrawler
-        EnvironmentVariables:
-          ALIYUN_AK: ALIYUN_AK_XXXXX
-          ALIYUN_SK: ALIYUN_SK_XXXXX
-      Events:
-        TmTrigger:
-          Type: Timer
-          Properties: 
-            CronExpression: "0 10 0 * * *"  # 每天早上 8:10 抓取当天的售卖时间
-            Enable: true
-    resultCrawler:
-      Type: 'Aliyun::Serverless::Function'
-      Properties:
-        Handler: resultCrawler.handler
+        Handler: timeCrawler.handler
         Runtime: python3
         Timeout: 60
         MemorySize: 512
@@ -76,11 +59,82 @@ Resources:
         EnvironmentVariables:
           ALIYUN_AK: ALIYUN_AK_XXXXX
           ALIYUN_SK: ALIYUN_SK_XXXXX
+          TZ: Asia/Shanghai
       Events:
         TmTrigger:
           Type: Timer
           Properties:
-            CronExpression: 0 0 22 * * *  # 每天早上 6:00 抓取前一天的赛果
+            CronExpression: 0 10 0 * * *
             Enable: true
-
-        
+    resultCrawler:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: resultCrawler.handler
+        Runtime: python3
+        Timeout: 600
+        MemorySize: 512
+        CodeUri: functions/src
+        EnvironmentVariables:
+          ALIYUN_AK: ALIYUN_AK_XXXXX
+          ALIYUN_SK: ALIYUN_SK_XXXXX
+          TZ: Asia/Shanghai
+      Events:
+        TmTrigger:
+          Type: Timer
+          Properties:
+            CronExpression: 0 0 22 * * *
+            Enable: true
+    matchDetailCrawler:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: matchDetailCrawler.handler
+        Runtime: python3
+        Timeout: 600
+        MemorySize: 512
+        CodeUri: functions/src
+        EnvironmentVariables:
+          ALIYUN_AK: ALIYUN_AK_XXXXX
+          ALIYUN_SK: ALIYUN_SK_XXXXX
+          TZ: Asia/Shanghai
+    trendImage:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: trendImage.handler
+        Runtime: python3
+        Timeout: 60
+        MemorySize: 512
+        CodeUri: functions/src
+        EnvironmentVariables:
+          ALIYUN_AK: ALIYUN_AK_XXXXX
+          ALIYUN_SK: ALIYUN_SK_XXXXX
+          TZ: Asia/Shanghai
+      Events:
+        httpTrigger:
+          Type: HTTP
+          Properties:
+            AuthType: ANONYMOUS
+            Methods:
+              - GET
+              - POST
+    trendImageSaver:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Initializer: save.initializer
+        InitializationTimeout: 3
+        Handler: save.handler
+        Runtime: nodejs10
+        Timeout: 120
+        MemorySize: 1024
+        InstanceConcurrency: 1
+        EnvironmentVariables:
+          LD_LIBRARY_PATH: >-
+            /code/.fun/root/usr/lib:/code/.fun/root/usr/lib/x86_64-linux-gnu:/code/.fun/root/lib/x86_64-linux-gnu:/code/.fun/root/usr/lib64:/code:/code/lib:/usr/local/lib
+          QINIU_AK: QINIU_AK_XXXXXX
+          QINIU_SK: QINIU_SK_XXXXXX
+        CodeUri: functions/trendImageSaver
+      Events:
+        TmTrigger:
+          Type: Timer
+          Properties:
+            CronExpression: 0 5 * * * *
+            Enable: true

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>近30天单关走势图</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+</head>
+<style type="text/css">
+    @media screen and (min-width: 600px){
+        #app{
+            max-width: 428px;
+        }
+    }
+    #app {
+        position: relative;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    .container {
+        text-align: center;
+        margin: 0 auto;
+    }
+    .container img {
+        width: 100%;
+    }
+    .copyright {
+        text-align: center;
+        font-size: 0.8em;
+    }
+    .upload-button {
+        border: solid 1px #ddd;
+        padding: 6px 12px;
+        border-radius: 6px;
+        background-color: crimson;
+        color: #fff;
+    }
+    .edit-comment {
+        border: solid 1px #ddd;
+        padding: 6px 12px;
+        border-radius: 6px;
+        background-color: royalblue;
+        color: #fff;
+    }
+
+    #edit-comment-dialog {
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    #comment-textarea {
+        width: 80%;
+        height: 200px;
+        padding: 5px;
+    }
+
+    #save-comment {
+        margin-top: 10px;
+        border: solid 1px #ddd;
+        padding: 6px 12px;
+        border-radius: 6px;
+        background-color: royalblue;
+        color: #fff;
+    }
+
+    #save-image-text {
+        position: absolute;
+        color: royalblue;
+    }
+</style>
+<body>
+<div class="container" id="app">
+    <div id="edit-comment-dialog" :style="{'display':editCommentDialog ? 'flex' : 'none'}">
+        <textarea v-model="editingComment" id="comment-textarea" placeholder="请填写单关解读文案"></textarea>
+        <div class="flex-row">
+            <div id="save-comment" @click="saveComment">保存</div>
+        </div>
+    </div>
+    <div id="save-image-text" :style="saveImageTextStyle">
+        长按保存图片
+    </div>
+    <img :src="imgUrl" alt="" @load="imageLoaded">
+    <div>
+        <label for="upload-input">
+            <div class="upload-button">{{ uploadLabel }}</div>
+            <input id="upload-input" type="file" accept="image/jpg, image/png" @change="uploadChange" hidden :disabled="uploading" />
+        </label>
+        <label for="edit-comment">
+            <div class="edit-comment" @click="showEditCommentDialog">编写单关解读文案</div>
+        </label>
+    </div>
+    <div class="copyright">
+        <p>此图应甘肃店主老李要求，由<a href="http://tc.jiedaimarket.cn/">旺彩</a>开发</p>
+        <p>免费工具制作，如有需求，请联系微信：zzcqnn</p>
+    </div>
+</div>
+<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+<script src="js/vue.min.js"></script>
+<script type="text/javascript" src="https://unpkg.com/qiniu-js@2.5.5/dist/qiniu.min.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            backgroundUrl: 'https://cdn.elmerzhang.com/sporttery/trends/image.jpg',
+            uploadBaseUrl: 'https://p.zhangkongshidai.cn/',
+            qrcodeUrl: '',
+            comment: '',
+            // qiniutokenApi: 'http://gs.jiedaimarket.cn/api/v6/thirdpart/qiniuauth',
+            qiniutokenApi: 'http://proxy.elmerzhang.com:8080/api/v6/thirdpart/qiniuauth',
+            uploading: false,
+            editCommentDialog: false,
+            editingComment: '',
+            imageSize: {
+                width: 0,
+                height: 0,
+                naturalWidth: 0,
+                naturalHeight: 0,
+            }
+        },
+        computed: {
+            imgUrl () {
+                let baseUrl = this.backgroundUrl;
+                let commentParam = '';
+                let qrcodeParam = '';
+                if (this.comment) {
+                    const dx = 330;
+                    const dy = this.imageSize.naturalHeight - 180;
+                    commentParam = `/text/${this.encode(this.comment)}/fontsize/500/gravity/NorthWest/dx/${dx}/dy/${dy}/fill/${this.encode("#000")}`;
+                }
+
+                if (this.qrcodeUrl) {
+                    var cropUrl = this.qrcodeUrl + '?imageMogr2/thumbnail/230x230'
+                    var encode = encodeURI(cropUrl)
+                    var dataUrl = btoa(encode).replace(/\+/g, '-').replace(/\//g, '_')
+                    qrcodeParam = `/image/${dataUrl}/gravity/SouthWest/dx/50/dy/50`;
+                }
+
+                if (this.comment || this.qrcodeUrl) {
+                    baseUrl += '?watermark/3'
+                } else {
+                    return baseUrl;
+                }
+
+                baseUrl += commentParam;
+                baseUrl += qrcodeParam;
+
+                return baseUrl;
+            },
+            uploadLabel () {
+                return this.uploading ? '上传中' : '点击上传二维码';
+            },
+            saveImageTextStyle () {
+                const ratio = this.imageSize.width / 1070;
+                const fontSize = 30 * ratio;
+                const top = 50 * ratio;
+                const left = 50 * ratio;
+                return {
+                    fontSize: fontSize + 'px',
+                    top: top + 'px',
+                    left: left + 'px',
+                };
+            }
+        },
+        methods: {
+            encode: function (str){
+                // 对字符串进行编码
+                let utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+                    return String.fromCharCode('0x' + p1);
+                });
+                // 对编码的字符串转化base64
+                let base64 = btoa(utf8Bytes).replace(/\+/g, '-').replace(/\//g, '_');
+                return base64;
+            },
+            uploadChange: function () {
+                if (document.querySelector('#upload-input').files.length === 0) {
+                    return;
+                }
+                this.uploading=true
+                var reader = new FileReader();
+                //filses就是input[type=file]文件列表，files[0]就是第一个文件，这里就是将选择的第一个图片文件转化为base64的码
+                var cardImageUrl = document.querySelector('#upload-input').files[0]
+                var fileName = 'uploaded/qrcode/' + Date.now() + Math.round(Math.random() * 899 + 100)
+                var vm = this;
+                $.ajax({
+                    url: this.qiniutokenApi,
+                    type: 'post',
+                    dataType: 'json',
+                    beforeSend: function (XMLHttpRequest) {
+                        XMLHttpRequest.setRequestHeader("sid", 'tempsession4gsgc');
+                    },
+                    async: true,
+                    success: function (res) {
+                        var qiniuToken = res.token;
+                        //拿到token之后，请求七牛云，将图片上传至七牛云
+                        var observable = qiniu.upload(
+                            cardImageUrl, //上传图片的blob对象
+                            fileName, //图片名
+                            qiniuToken, //token
+                            {
+                                fname: fileName,
+                                params: {}, //用来放置自定义变量
+                                mimeType: null
+                            }, {
+                                useCdnDomain: true,
+                                region: qiniu.region.z0
+                            }
+                        );
+                        observable.subscribe({
+                            complete(res) {
+                                vm.qrcodeUrl = vm.uploadBaseUrl + res.key;
+                                console.log('qrcodeUrl', vm.qrcodeUrl);
+                            }
+                        });
+                    },
+                    error: function (e) {
+                        console.log('获取七牛云token失败:' + JSON.stringify(e));
+                    }
+                })
+            },
+            imageLoaded: function(e) {
+                this.loading = false;
+                this.imageSize.width = e.target.width;
+                this.imageSize.height = e.target.height;
+                this.imageSize.naturalWidth = e.target.naturalWidth;
+                this.imageSize.naturalHeight = e.target.naturalHeight;
+                console.log(this.imageSize);
+            },
+            saveComment: function() {
+                this.comment = this.editingComment;
+                this.editCommentDialog = false;
+            },
+            showEditCommentDialog: function() {
+                this.editingComment = this.comment;
+                this.editCommentDialog = true;
+            }
+        }
+    })
+</script>
+<div style="display: none;"><script type="text/javascript">document.write(unescape("%3Cspan id='cnzz_stat_icon_1278941519'%3E%3C/span%3E%3Cscript src='https://v1.cnzz.com/z_stat.php%3Fid%3D1278941519' type='text/javascript'%3E%3C/script%3E"));</script></div>
+</body>
+</html>

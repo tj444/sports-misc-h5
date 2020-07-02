@@ -1,0 +1,33 @@
+{
+  "name": "puppeteer-example",
+  "version": "1.0.0",
+  "description": "该项目模板是一个基于 puppeteer 的截图工具。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "puppeteer-core": "^1.4.0",
+    "qiniu": "^7.3.2",
+    "tar": "^4.4.4"
+  },
+  "author": "Vangie Du",
+  "license": "ISC",
+  "directories": {
+    "lib": "lib"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vangie/puppeteer-example.git"
+  },
+  "keywords": [
+    "puppeteer",
+    "fun",
+    "fc"
+  ],
+  "bugs": {
+    "url": "https://github.com/vangie/puppeteer-example/issues"
+  },
+  "homepage": "https://github.com/vangie/puppeteer-example#readme"
+}

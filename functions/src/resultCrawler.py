@@ -5,13 +5,19 @@ import requests
 import db
 import hashlib
 import datetime
+import matchDetailCrawler
 from math import floor
 
 logger = logging.getLogger()
 
 def handler(event, context):
-  yesterday = datetime.date.today() - datetime.timedelta(days=1)
-  date = yesterday.isoformat()
+  events = json.loads(event)
+  if events.get('date'):
+    for date in events.get('date'):
+      crawl(date)
+  else:
+    yesterday = datetime.date.today() - datetime.timedelta(days=1)
+    date = yesterday.isoformat()
   return crawl(date)
 
 def crawl(date):
@@ -53,6 +59,7 @@ def crawl(date):
             half = value['half']
             final = value['final']
 
+          matchDetailCrawler.crawl(matchId)
           with conn.cursor() as cursor:
             sql = 'UPDATE `matchinfo` SET matchStatus = %s, half = %s, final = %s WHERE matchId = %s AND matchStatus IS NULL'
             logger.info((matchStatus, half, final, matchId))
