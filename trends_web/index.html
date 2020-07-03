@@ -86,6 +86,10 @@
         border: solid 1px;
         color: #ff0000;
     }
+
+    #qrcode-placeholder {
+        position: absolute;
+    }
 </style>
 <body>
 <div class="container" id="app">
@@ -95,6 +99,7 @@
             <div id="save-comment" @click="saveComment">保存</div>
         </div>
     </div>
+    <div id="qrcode-placeholder" :style="qrcodePlaceholderStyle" @click="changeImage"></div>
     <div id="comment-placeholder" :style="commentPlaceholderStyle" @click="showEditCommentDialog">
         <div>单关解读文案</div>
     </div>
@@ -105,7 +110,7 @@
     <div>
         <label for="upload-input">
             <div class="upload-button">{{ uploadLabel }}</div>
-            <input id="upload-input" type="file" accept="image/jpg, image/png" @change="uploadChange" hidden :disabled="uploading" />
+            <input id="upload-input" ref="uploadInput" type="file" accept="image/jpg, image/png" @change="uploadChange" hidden :disabled="uploading" />
         </label>
         <label for="edit-comment">
             <div class="edit-comment" @click="showEditCommentDialog">编写单关解读文案</div>
@@ -113,7 +118,7 @@
     </div>
     <div class="copyright">
         <p>此图应甘肃店主老李要求，由<a href="http://tc.jiedaimarket.cn/">旺彩</a>开发</p>
-        <p>免费工具制作，如有需求，请联系微信：zzcqnn</p>
+        <p>免费工具制作，如有需求，请联系微信：caidianfw</p>
     </div>
 </div>
 <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
@@ -139,6 +144,21 @@
             }
         },
         computed: {
+            qrcodePlaceholderStyle () {
+                const ratio = this.imageSize.width / 1070;
+                const top = this.imageSize.height - 280 * ratio;
+                const left = 50 * ratio;
+                const width = 230 * ratio;
+                const height = 230 * ratio;
+
+                return {
+                    'display': this.comment ? 'none' : 'flex',
+                    'top': top + 'px',
+                    'left': left + 'px',
+                    'width': width + 'px',
+                    'height': height + 'px',
+                };
+            },
             commentPlaceholderStyle () {
                 const ratio = this.imageSize.width / 1070;
                 const top = this.imageSize.height - 180 * ratio;
@@ -286,6 +306,9 @@
             showEditCommentDialog: function() {
                 this.editingComment = this.comment;
                 this.editCommentDialog = true;
+            },
+            changeImage: function() {
+                this.$refs.uploadInput.click();
             }
         }
     })
