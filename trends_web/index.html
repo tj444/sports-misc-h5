@@ -76,6 +76,16 @@
         position: absolute;
         color: royalblue;
     }
+
+    #comment-placeholder {
+        position: absolute;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        background-color: #ffffff;
+        border: solid 1px;
+        color: #ff0000;
+    }
 </style>
 <body>
 <div class="container" id="app">
@@ -84,6 +94,9 @@
         <div class="flex-row">
             <div id="save-comment" @click="saveComment">保存</div>
         </div>
+    </div>
+    <div id="comment-placeholder" :style="commentPlaceholderStyle" @click="showEditCommentDialog">
+        <div>单关解读文案</div>
     </div>
     <div id="save-image-text" :style="saveImageTextStyle">
         长按保存图片
@@ -110,12 +123,11 @@
     new Vue({
         el: '#app',
         data: {
-            backgroundUrl: 'https://cdn.elmerzhang.com/sporttery/trends/image.jpg',
+            backgroundUrl: 'https://p.zhangkongshidai.cn/sporttery/trends/image.jpg',
             uploadBaseUrl: 'https://p.zhangkongshidai.cn/',
             qrcodeUrl: '',
             comment: '',
-            // qiniutokenApi: 'http://gs.jiedaimarket.cn/api/v6/thirdpart/qiniuauth',
-            qiniutokenApi: 'http://proxy.elmerzhang.com:8080/api/v6/thirdpart/qiniuauth',
+            qiniutokenApi: 'http://gs.jiedaimarket.cn/api/v6/thirdpart/qiniuauth',
             uploading: false,
             editCommentDialog: false,
             editingComment: '',
@@ -127,28 +139,61 @@
             }
         },
         computed: {
+            commentPlaceholderStyle () {
+                const ratio = this.imageSize.width / 1070;
+                const top = this.imageSize.height - 180 * ratio;
+                const left = 330 * ratio;
+                const width = 640 * ratio;
+                const height = 120 * ratio;
+
+                return {
+                    'display': this.comment ? 'none' : 'flex',
+                    'top': top + 'px',
+                    'left': left + 'px',
+                    'width': width + 'px',
+                    'height': height + 'px',
+                };
+            },
             imgUrl () {
                 let baseUrl = this.backgroundUrl;
                 let commentParam = '';
                 let qrcodeParam = '';
+
+                commentParam = '';
                 if (this.comment) {
                     const dx = 330;
-                    const dy = this.imageSize.naturalHeight - 180;
-                    commentParam = `/text/${this.encode(this.comment)}/fontsize/500/gravity/NorthWest/dx/${dx}/dy/${dy}/fill/${this.encode("#000")}`;
+                    const lineHeight = 30;
+                    let dy = this.imageSize.naturalHeight - 180;
+                    comments = this.comment.split(/\r\n|\n/);
+                    for (let comment of comments) {
+                        while (comment.length > 22) {
+                            let line = comment.substring(0, 22);
+                            commentParam += `/text/${this.encode(line)}/fontsize/600/gravity/NorthWest/dx/${dx}/dy/${dy}/fill/${this.encode("#f00")}`;
+                            dy += lineHeight;
+                            comment = comment.substring(22);
+                        }
+                        commentParam += `/text/${this.encode(comment)}/fontsize/600/gravity/NorthWest/dx/${dx}/dy/${dy}/fill/${this.encode("#f00")}`;
+                        dy += lineHeight * 1.5;
+                    }
+                } else {
+                    let dx = 380;
+                    let dy = this.imageSize.naturalHeight - 180;
+                    let defaultComment = '彩市有风险，投资需谨慎！'
+                    commentParam += `/text/${this.encode(defaultComment)}/fontsize/900/gravity/NorthWest/dx/${dx}/dy/${dy}/fill/${this.encode("#f00")}`;
+                    dx += 45;
+                    dy += 60;
+                    defaultComment = '参考别人，相信自己！'
+                    commentParam += `/text/${this.encode(defaultComment)}/fontsize/900/gravity/NorthWest/dx/${dx}/dy/${dy}/fill/${this.encode("#f00")}`;
                 }
 
                 if (this.qrcodeUrl) {
-                    var cropUrl = this.qrcodeUrl + '?imageMogr2/thumbnail/230x230'
+                    var cropUrl = this.qrcodeUrl + '?imageMogr2/thumbnail/230x230!'
                     var encode = encodeURI(cropUrl)
                     var dataUrl = btoa(encode).replace(/\+/g, '-').replace(/\//g, '_')
                     qrcodeParam = `/image/${dataUrl}/gravity/SouthWest/dx/50/dy/50`;
                 }
 
-                if (this.comment || this.qrcodeUrl) {
-                    baseUrl += '?watermark/3'
-                } else {
-                    return baseUrl;
-                }
+                baseUrl += '?watermark/3'
 
                 baseUrl += commentParam;
                 baseUrl += qrcodeParam;
@@ -227,7 +272,7 @@
                 })
             },
             imageLoaded: function(e) {
-                this.loading = false;
+                this.uploading = false;
                 this.imageSize.width = e.target.width;
                 this.imageSize.height = e.target.height;
                 this.imageSize.naturalWidth = e.target.naturalWidth;

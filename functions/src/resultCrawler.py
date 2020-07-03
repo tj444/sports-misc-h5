@@ -16,9 +16,12 @@ def handler(event, context):
     for date in events.get('date'):
       crawl(date)
   else:
-    yesterday = datetime.date.today() - datetime.timedelta(days=1)
-    date = yesterday.isoformat()
-  return crawl(date)
+    today = datetime.date.today()
+    crawl(today.isoformat())
+    yesterday = today - datetime.timedelta(days=1)
+    crawl(yesterday.isoformat())
+  
+  return 'Done'
 
 def crawl(date):
   conn = db.getConnection()

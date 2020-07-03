@@ -92,6 +92,21 @@
                 width: 60px;
             }
 
+            #table-container table .spf.active-win {
+                background: #ff0000;
+                color: #ffffff;
+            }
+
+            #table-container table .spf.active-level {
+                background: #83bf40;
+                color: #ffffff;
+            }
+
+            #table-container table .spf.active-lose {
+                background: #407abf;
+                color: #ffffff;
+            }
+
             #table-container table .odds {
                 background: #ffd797;
                 width: 50px;

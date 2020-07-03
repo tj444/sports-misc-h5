@@ -62,14 +62,17 @@ function uploadToQiniu(localFile, callback) {
   const accessKey = process.env.QINIU_AK;
   const secretKey = process.env.QINIU_SK;
   const mac = new qiniu.auth.digest.Mac(accessKey, secretKey);
-  var key = 'sporttery/trends/image.jpg';
-  var options = {
-    scope: 'elmercdn:' + key
+  // const key = 'sporttery/trends/image.jpg';
+  // const bucket = 'elmercdn';
+  const key = process.env.QINIU_FILEKEY;
+  const bucket = process.env.QINIU_BUCKET;
+  const options = {
+    scope: bucket + ':' + key
   }
   const putPolicy = new qiniu.rs.PutPolicy(options);
   const uploadToken = putPolicy.uploadToken(mac);
   const config = new qiniu.conf.Config();
-  config.zone = qiniu.zone.Zone_z2;
+  config.zone = qiniu.zone[process.env.QINIU_UPZONE];
 
   const formUploader = new qiniu.form_up.FormUploader(config);
   const putExtra = new qiniu.form_up.PutExtra();
@@ -83,7 +86,8 @@ function uploadToQiniu(localFile, callback) {
       const cdnManager = new qiniu.cdn.CdnManager(mac);
 
       console.log(respBody);
-      cdnManager.refreshUrls(['http://cdn.elmerzhang.com/sporttery/trends/image.jpg'], function(err, respBody, respInfo) {
+      const url = process.env.QINIU_URL + '/' + process.env.QINIU_FILEKEY;
+      cdnManager.refreshUrls([url], function(err, respBody, respInfo) {
         if (respInfo.statusCode == 200) {
           console.log(respBody);
           callback(null, localFile);

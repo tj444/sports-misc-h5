@@ -105,9 +105,9 @@ def handler(environ, start_response):
         hostTeam = '(' + v['letCount'] + ')' + hostTeam
       if v.get('finalScore'):
         contentTableHtml += '<td class="match">%s<span class="score">%s</span>%s</td>' % (hostTeam, v['finalScore'], v['visitingTeam'])
-        contentTableHtml += '<td class="spf %s">%s</td>' % ('active-' + v['activeOddsLevel'] if v['letResult'] == 1 else '', v['winOdds'])
-        contentTableHtml += '<td class="spf %s">%s</td>' % ('active-' + v['activeOddsLevel'] if v['letResult'] == 0 else '', v['levelOdds'])
-        contentTableHtml += '<td class="spf %s">%s</td>' % ('active-' + v['activeOddsLevel'] if v['letResult'] == -1 else '', v['loseOdds'])
+        contentTableHtml += '<td class="spf %s">%s</td>' % ('active-win' if v['letResult'] == 1 else '', v['winOdds'])
+        contentTableHtml += '<td class="spf %s">%s</td>' % ('active-level' if v['letResult'] == 0 else '', v['levelOdds'])
+        contentTableHtml += '<td class="spf %s">%s</td>' % ('active-lose' if v['letResult'] == -1 else '', v['loseOdds'])
         contentTableHtml += '<td class="odds %s">%s</td>' % ('active-low' if v['miss']['low'] == 0 else '', '低' if v['miss']['low'] == 0 else v['miss']['low'])
         contentTableHtml += '<td class="odds %s">%s</td>' % ('active-middle' if v['miss']['middle'] == 0 else '', '中' if v['miss']['middle'] == 0 else v['miss']['middle'])
         contentTableHtml += '<td class="odds %s">%s</td>' % ('active-high' if v['miss']['high'] == 0 else '', '高' if v['miss']['high'] == 0 else v['miss']['high'])
