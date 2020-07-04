@@ -82,7 +82,7 @@ Resources:
         TmTrigger:
           Type: Timer
           Properties:
-            CronExpression: 0 0 22 * * *
+            CronExpression: 0 1 * * * *
             Enable: true
     matchDetailCrawler:
       Type: 'Aliyun::Serverless::Function'
@@ -96,6 +96,12 @@ Resources:
           ALIYUN_AK: ALIYUN_AK_XXXXX
           ALIYUN_SK: ALIYUN_SK_XXXXX
           TZ: Asia/Shanghai
+      Events:
+        TmTrigger:
+          Type: Timer
+          Properties:
+            CronExpression: 0 1 * * * *
+            Enable: true
     trendImage:
       Type: 'Aliyun::Serverless::Function'
       Properties:
@@ -131,6 +137,10 @@ Resources:
             /code/.fun/root/usr/lib:/code/.fun/root/usr/lib/x86_64-linux-gnu:/code/.fun/root/lib/x86_64-linux-gnu:/code/.fun/root/usr/lib64:/code:/code/lib:/usr/local/lib
           QINIU_AK: QINIU_AK_XXXXXX
           QINIU_SK: QINIU_SK_XXXXXX
+          QINIU_BUCKET: QINIU_BUCKET_XXXXXX
+          QINIU_UPZONE: Zone_z0
+          QINIU_FILEKEY: XXXXXXX/image.jpg
+          QINIU_URL: https://XXXXXXX
         CodeUri: functions/trendImageSaver
       Events:
         TmTrigger:

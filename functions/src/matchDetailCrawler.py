@@ -24,6 +24,14 @@ def handler(event, context):
   if events.get('matchId'):
     for matchId in events.get('matchId'):
       crawl(matchId)
+  else:
+    conn = db.getConnection()
+    with conn.cursor() as cursor:
+      cursor.execute('SELECT `matchId` FROM `matchinfo` WHERE `matchStatus` IS NULL')
+      rows = cursor.fetchall()
+      for row in rows:
+        crawl(row['matchId'])
+
   return 'Done'
 
 def crawl(matchId, matchPeriod = None):

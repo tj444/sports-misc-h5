@@ -206,6 +206,8 @@ def preProcessData(matchData):
   return result
 
 def filter30day(alldata, startTime):
+  endOfToday = floor(datetime.datetime.timestamp(datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())) * 1000) + 86400000
+
   data = []
   curMiss = dict({
     'low': 0,
@@ -217,7 +219,7 @@ def filter30day(alldata, startTime):
   })
 
   for v in alldata.values():
-    if v['saleStopTime'] < startTime:
+    if v['saleStopTime'] < startTime or v['saleStopTime'] > endOfToday:
       continue
 
     if v.get('finalScore'):
