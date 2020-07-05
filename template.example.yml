@@ -146,5 +146,5 @@ Resources:
         TmTrigger:
           Type: Timer
           Properties:
-            CronExpression: 0 5 * * * *
+            CronExpression: 0 2/10 * * * *
             Enable: true

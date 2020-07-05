@@ -56,11 +56,8 @@ def crawl(date):
           row = dict()
           matchId = value['id']
           matchStatus = value['match_status']
-          half = ''
-          final = ''
-          if matchStatus == 'Final':
-            half = value['half']
-            final = value['final']
+          half = value['half']
+          final = value['final']
 
           matchDetailCrawler.crawl(matchId)
           with conn.cursor() as cursor:

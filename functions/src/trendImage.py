@@ -51,11 +51,11 @@ def handler(environ, start_response):
     WITH tmptable AS (
       SELECT matchinfo.matchId, matchinfo.saleStopTime, matchinfo.number, matchinfo.hostTeamAbbr AS hostTeam, matchinfo.visitingTeamAbbr as visitingTeam, matchinfo.half, matchinfo.final, win, level, lose, 0 as letCount, releaseTime
     FROM spfodds JOIN matchinfo ON matchinfo.matchId = spfodds.matchId
-    WHERE isSingle = '1' AND (matchinfo.matchStatus = 'Final' OR matchinfo.matchStatus IS NULL) AND saleStopTime > %s
+    WHERE isSingle = '1' AND (matchinfo.matchStatus IN ('Final', 'Close') OR matchinfo.matchStatus IS NULL) AND saleStopTime > %s
       UNION ALL
       SELECT matchinfo.matchId, matchinfo.saleStopTime, matchinfo.number, matchinfo.hostTeamAbbr , matchinfo.visitingTeamAbbr, matchinfo.half, matchinfo.final, letWin, letLevel, letLose, letCount, releaseTime
     FROM rqspfodds JOIN matchinfo ON matchinfo.matchId = rqspfodds.matchId
-    WHERE isLetSingle = '1' AND (matchinfo.matchStatus = 'Final' OR matchinfo.matchStatus IS NULL) AND saleStopTime > %s
+    WHERE isLetSingle = '1' AND (matchinfo.matchStatus IN ('Final', 'Close') OR matchinfo.matchStatus IS NULL) AND saleStopTime > %s
     )
     SELECT * FROM tmptable ORDER BY matchId ASC, releaseTime DESC;
     """
