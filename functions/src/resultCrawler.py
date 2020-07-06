@@ -61,7 +61,7 @@ def crawl(date):
 
           matchDetailCrawler.crawl(matchId)
           with conn.cursor() as cursor:
-            sql = 'UPDATE `matchinfo` SET matchStatus = %s, half = %s, final = %s WHERE matchId = %s AND matchStatus IS NULL'
+            sql = 'UPDATE `matchinfo` SET matchStatus = %s, half = %s, final = %s WHERE matchId = %s'
             logger.info((matchStatus, half, final, matchId))
             cursor.execute(sql, (matchStatus, half, final, matchId))
 

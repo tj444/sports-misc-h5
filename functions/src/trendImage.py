@@ -49,11 +49,11 @@ def handler(environ, start_response):
     matchData = []
     sql = """
     WITH tmptable AS (
-      SELECT matchinfo.matchId, matchinfo.saleStopTime, matchinfo.number, matchinfo.hostTeamAbbr AS hostTeam, matchinfo.visitingTeamAbbr as visitingTeam, matchinfo.half, matchinfo.final, win, level, lose, 0 as letCount, releaseTime
+      SELECT matchinfo.matchId, matchInfo.matchPeriod, matchinfo.saleStopTime, matchinfo.number, matchinfo.hostTeamAbbr AS hostTeam, matchinfo.visitingTeamAbbr as visitingTeam, matchinfo.half, matchinfo.final, win, level, lose, 0 as letCount, releaseTime
     FROM spfodds JOIN matchinfo ON matchinfo.matchId = spfodds.matchId
     WHERE isSingle = '1' AND (matchinfo.matchStatus IN ('Final', 'Close') OR matchinfo.matchStatus IS NULL) AND saleStopTime > %s
       UNION ALL
-      SELECT matchinfo.matchId, matchinfo.saleStopTime, matchinfo.number, matchinfo.hostTeamAbbr , matchinfo.visitingTeamAbbr, matchinfo.half, matchinfo.final, letWin, letLevel, letLose, letCount, releaseTime
+      SELECT matchinfo.matchId, matchInfo.matchPeriod, matchinfo.saleStopTime, matchinfo.number, matchinfo.hostTeamAbbr , matchinfo.visitingTeamAbbr, matchinfo.half, matchinfo.final, letWin, letLevel, letLose, letCount, releaseTime
     FROM rqspfodds JOIN matchinfo ON matchinfo.matchId = rqspfodds.matchId
     WHERE isLetSingle = '1' AND (matchinfo.matchStatus IN ('Final', 'Close') OR matchinfo.matchStatus IS NULL) AND saleStopTime > %s
     )
@@ -173,6 +173,7 @@ def preProcessData(matchData):
       matchInfo = dict()
       matchInfo['matchId'] = row['matchId']
       matchInfo['saleStopTime'] = row['saleStopTime']
+      matchInfo['matchPeriod'] = row['matchPeriod']
       saleStopDateTime = datetime.datetime.fromtimestamp(row['saleStopTime'] / 1000)
       matchInfo['date'] = saleStopDateTime.strftime('%m月%d日')
       matchInfo['weekday'] = row['number'][1]
@@ -206,7 +207,7 @@ def preProcessData(matchData):
   return result
 
 def filter30day(alldata, startTime):
-  endOfToday = floor(datetime.datetime.timestamp(datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())) * 1000) + 86400000
+  today = datetime.date.today()
 
   data = []
   curMiss = dict({
@@ -219,7 +220,7 @@ def filter30day(alldata, startTime):
   })
 
   for v in alldata.values():
-    if v['saleStopTime'] < startTime or v['saleStopTime'] > endOfToday:
+    if v['saleStopTime'] < startTime or v['matchPeriod'] > today:
       continue
 
     if v.get('finalScore'):
