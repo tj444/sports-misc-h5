@@ -123,6 +123,7 @@
 </div>
 <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
 <script src="js/vue.min.js"></script>
+<script src="js/vue-cookies.min.js"></script>
 <script type="text/javascript" src="https://unpkg.com/qiniu-js@2.5.5/dist/qiniu.min.js"></script>
 <script>
     new Vue({
@@ -237,8 +238,8 @@
             }
         },
         mounted() {
-            if (window.localStorage && window.localStorage.qrcodeUrl) {
-                this.qrcodeUrl = window.localStorage.qrcodeUrl;
+            if (this.$cookies.get('qrcodeUrl')) {
+                this.qrcodeUrl = this.$cookies.get('qrcodeUrl');
             }
         },
         methods: {
@@ -288,9 +289,7 @@
                         observable.subscribe({
                             complete(res) {
                                 vm.qrcodeUrl = vm.uploadBaseUrl + res.key;
-                                if (window.localStorage) {
-                                    window.localStorage.qrcodeUrl = vm.qrcodeUrl;
-                                }
+                                vm.$cookies.set('qrcodeUrl', vm.qrcodeUrl);
                                 console.log('qrcodeUrl', vm.qrcodeUrl);
                             }
                         });
