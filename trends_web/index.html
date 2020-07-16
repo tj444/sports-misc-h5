@@ -236,6 +236,11 @@
                 };
             }
         },
+        mounted() {
+            if (window.localStorage && window.localStorage.qrcodeUrl) {
+                this.qrcodeUrl = window.localStorage.qrcodeUrl;
+            }
+        },
         methods: {
             encode: function (str){
                 // 对字符串进行编码
@@ -283,6 +288,9 @@
                         observable.subscribe({
                             complete(res) {
                                 vm.qrcodeUrl = vm.uploadBaseUrl + res.key;
+                                if (window.localStorage) {
+                                    window.localStorage.qrcodeUrl = vm.qrcodeUrl;
+                                }
                                 console.log('qrcodeUrl', vm.qrcodeUrl);
                             }
                         });
