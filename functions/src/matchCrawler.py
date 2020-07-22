@@ -9,12 +9,15 @@ from math import floor
 
 logger = logging.getLogger()
 
+CRAWLER_LOG_TYPE = 'get_odds'
+
 def handler(event, context):
   conn = db.getConnection()
 
   try:
     today = datetime.date.today().isoformat()
     startTime = None
+    stopTime = None
 
     # 检查是否在售卖时间，如果不在售卖时间，不必抓取
     with conn.cursor() as cursor:
@@ -24,13 +27,6 @@ def handler(event, context):
         now = datetime.datetime.timestamp(datetime.datetime.now()) * 1000
         startTime = dbResult['startTime']
         stopTime = dbResult['stopTime']
-        if startTime > now or stopTime < now:
-          logger.info('Not on sale')
-          return 'Done'
-      else:
-        # 没有抓取到当天的售卖时间，不抓取赛事
-        logger.info('Not on sale')
-        return 'Done'
 
     # 抓取赛事数据
     url = 'https://i.sporttery.cn/odds_calculator/get_odds?i_format=json&poolcode[]=hhad&poolcode[]=had&poolcode[]=crs&poolcode[]=ttg&poolcode[]=hafu'
@@ -43,7 +39,7 @@ def handler(event, context):
 
     # 赛事数据没有更新的话直接结束
     with conn.cursor() as cursor:
-      cursor.execute('SELECT `id` FROM `crawlerlog` WHERE `date` = %s AND `sha256` = %s', (today, sha256))
+      cursor.execute('SELECT `id` FROM `crawlerlog` WHERE `date` = %s AND `type` = %s AND `sha256` = %s', (today, CRAWLER_LOG_TYPE, sha256))
       dbResult = cursor.fetchone()
       if dbResult != None:
         logger.info('No updated data')
@@ -86,7 +82,7 @@ def handler(event, context):
           tmpValue = value['had']
           row = dict()
           row['matchId'] = matchId
-          row['isSpf'] = tmpValue['p_status']
+          row['isSpf'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
           row['isSingle'] = tmpValue['single']
           row['win'] = tmpValue['h']
           row['level'] = tmpValue['d']
@@ -103,7 +99,7 @@ def handler(event, context):
           tmpValue = value['hhad']
           row = dict()
           row['matchId'] = matchId
-          row['isRqspf'] = tmpValue['p_status']
+          row['isRqspf'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
           row['isLetSingle'] = tmpValue['single']
           row['letCount'] = tmpValue['fixedodds']
           row['letWin'] = tmpValue['h']
@@ -121,7 +117,7 @@ def handler(event, context):
           tmpValue = value['crs']
           row = dict()
           row['matchId'] = matchId
-          row['isBf'] = tmpValue['p_status']
+          row['isBf'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
           row['zeroToZero'] = tmpValue['0000']
           row['zeroToOne'] = tmpValue['0001']
           row['zeroToTwo'] = tmpValue['0002']
@@ -165,7 +161,7 @@ def handler(event, context):
           tmpValue = value['hafu']
           row = dict()
           row['matchId'] = matchId
-          row['isBqc'] = tmpValue['p_status']
+          row['isBqc'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
           row['winWin'] = tmpValue['hh']
           row['winLevel'] = tmpValue['hd']
           row['winLose'] = tmpValue['ha']
@@ -187,7 +183,7 @@ def handler(event, context):
           tmpValue = value['ttg']
           row = dict()
           row['matchId'] = matchId
-          row['isZjq'] = tmpValue['p_status']
+          row['isZjq'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
           row['zero'] = tmpValue['s0']
           row['one'] = tmpValue['s1']
           row['two'] = tmpValue['s2']
@@ -205,7 +201,7 @@ def handler(event, context):
 
     # 保存本次抓取日志
     with conn.cursor() as cursor:
-      cursor.execute('INSERT INTO `crawlerlog` (`date`, `sha256`, `content`) VALUES (%s, %s, %s)', (today, sha256, resultText))
+      cursor.execute('INSERT INTO `crawlerlog` (`date`, `type`, `sha256`, `content`) VALUES (%s, %s, %s, %s)', (today, CRAWLER_LOG_TYPE, sha256, resultText))
     conn.commit()
 
     return 'Done!'

@@ -109,7 +109,8 @@ def handler(environ, start_response):
       if len(dbResult) > 0:
         for row in dbResult:
           matchData = {**defaultFields, **row, 'matchPeriod': row.get('matchPeriod').isoformat()}
-          data += [matchData]
+          if matchData['isSpf'] == 'Selling' or matchData['isRqspf'] == 'Selling' or matchData['isBf'] == 'Selling' or matchData['isBqc'] == 'Selling' or matchData['isZjq'] == 'Selling':
+            data.append(matchData)
   finally:
     conn.close()
 

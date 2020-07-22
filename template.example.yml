@@ -15,11 +15,11 @@ Resources:
     crawler:
       Type: 'Aliyun::Serverless::Function'
       Properties:
-        Handler: index.handler
+        Handler: matchCrawler.handler
         Runtime: python3
         Timeout: 600
         MemorySize: 512
-        CodeUri: functions/crawler
+        CodeUri: functions/src
         EnvironmentVariables:
           ALIYUN_AK: ALIYUN_AK_XXXXX
           ALIYUN_SK: ALIYUN_SK_XXXXX
@@ -32,11 +32,11 @@ Resources:
     apiMatchGetFootball:
       Type: 'Aliyun::Serverless::Function'
       Properties:
-        Handler: index.handler
+        Handler: apiMatchGetFootball.handler
         Runtime: python3
         Timeout: 60
         MemorySize: 512
-        CodeUri: functions/apiMatchGetFootball
+        CodeUri: functions/src
         EnvironmentVariables:
           ALIYUN_AK: ALIYUN_AK_XXXXX
           ALIYUN_SK: ALIYUN_SK_XXXXX
