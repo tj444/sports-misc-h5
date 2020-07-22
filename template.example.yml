@@ -166,4 +166,21 @@ Resources:
           Properties:
             CronExpression: 0 1/5 * * * *
             Enable: true
-        
+    apiResultCalcBonus:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: apiResultCalcBonus.handler
+        Runtime: python3
+        Timeout: 60
+        MemorySize: 512
+        CodeUri: functions/src
+        EnvironmentVariables:
+          ALIYUN_AK: QINIU_AK_XXXXXX
+          ALIYUN_SK: QINIU_SK_XXXXXX
+      Events:
+        httpTrigger:
+          Type: HTTP
+          Properties:
+            AuthType: ANONYMOUS
+            Methods:
+              - POST
