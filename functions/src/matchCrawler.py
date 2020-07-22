@@ -79,8 +79,6 @@ def handler(event, context):
           fieldsStr = ', '.join(map(lambda x: '`' + x + '`', row.keys()))
           valuesStr = ', '.join([] + ['%s'] * len(row))
           sql = 'REPLACE INTO `matchinfo` (%s) VALUES (%s)' % (fieldsStr, valuesStr)
-          logger.info(sql)
-          logger.info(tuple(row.values()))
           cursor.execute(sql, tuple(row.values()))
 
         # 保存赛事胜平负数据

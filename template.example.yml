@@ -148,3 +148,22 @@ Resources:
           Properties:
             CronExpression: 0 2/10 * * * *
             Enable: true
+    matchStatusCrawler:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: matchStatusCrawler.handler
+        Runtime: python3
+        Timeout: 600
+        MemorySize: 512
+        CodeUri: functions/src
+        EnvironmentVariables:
+          ALIYUN_AK: QINIU_AK_XXXXXX
+          ALIYUN_SK: QINIU_SK_XXXXXX
+          TZ: Asia/Shanghai
+      Events:
+        TmTrigger:
+          Type: Timer
+          Properties:
+            CronExpression: 0 1/5 * * * *
+            Enable: true
+        

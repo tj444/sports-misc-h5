@@ -224,6 +224,20 @@ DROP TABLE IF EXISTS zjqodds; CREATE TABLE zjqodds (
     UNIQUE KEY `uniq_matchId_releaseTime` (`matchId`, `releaseTime`)
 ) default charset utf8mb4;
 
+DROP TABLE IF EXISTS matchstatus; CREATE TABLE matchstatus (
+    `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `matchId` int NOT NULL,
+    `matchStatus` varchar(10),
+    `hostFinalScore` int,
+    `visitingFinalScore` int,
+    `hostHalfScore` int,
+    `visitingHalfScore` int,
+    `result` text,
+    `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uniq_matchId` (`matchId`)
+) default charset utf8mb4;
+
 DROP TABLE IF EXISTS saletime; CREATE TABLE saletime (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `date` date NOT NULL UNIQUE,
@@ -237,6 +251,7 @@ DROP TABLE IF EXISTS saletime; CREATE TABLE saletime (
 DROP TABLE IF EXISTS crawlerlog; CREATE TABLE crawlerlog (
     `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `date` date NOT NULL,
+    `type` varchar(50),
     `sha256` char(64) NOT NULL,
     `content` mediumtext NOT NULL,
     `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
