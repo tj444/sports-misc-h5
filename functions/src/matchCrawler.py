@@ -12,6 +12,13 @@ logger = logging.getLogger()
 CRAWLER_LOG_TYPE = 'get_odds'
 
 def handler(event, context):
+  forceUpdate = False
+  try:
+    evt = json.loads(event)
+    forceUpdate = evt.get('forceUpdate') == True
+  except Exception as e:
+    logger.error(e)
+
   conn = db.getConnection()
 
   try:
@@ -19,7 +26,7 @@ def handler(event, context):
     startTime = None
     stopTime = None
 
-    # 检查是否在售卖时间，如果不在售卖时间，不必抓取
+    # 查询售卖时间
     with conn.cursor() as cursor:
       cursor.execute('SELECT `startTime`, `stopTime` FROM `saletime` WHERE `date` = %s', (today))
       dbResult = cursor.fetchone()
@@ -37,13 +44,14 @@ def handler(event, context):
     sha256 = h.hexdigest()
     logger.info('sha256: ' + sha256)
 
-    # 赛事数据没有更新的话直接结束
-    with conn.cursor() as cursor:
-      cursor.execute('SELECT `id` FROM `crawlerlog` WHERE `date` = %s AND `type` = %s AND `sha256` = %s', (today, CRAWLER_LOG_TYPE, sha256))
-      dbResult = cursor.fetchone()
-      if dbResult != None:
-        logger.info('No updated data')
-        return 'Done'
+    if not forceUpdate:
+      # 赛事数据没有更新的话直接结束
+      with conn.cursor() as cursor:
+        cursor.execute('SELECT `id` FROM `crawlerlog` WHERE `date` = %s AND `type` = %s AND `sha256` = %s', (today, CRAWLER_LOG_TYPE, sha256))
+        dbResult = cursor.fetchone()
+        if dbResult != None:
+          logger.info('No updated data')
+          return 'Done'
 
     result = json.loads(resultText)
 
@@ -82,7 +90,8 @@ def handler(event, context):
           tmpValue = value['had']
           row = dict()
           row['matchId'] = matchId
-          row['isSpf'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
+          # row['isSpf'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
+          row['isSpf'] = tmpValue['p_status']
           row['isSingle'] = tmpValue['single']
           row['win'] = tmpValue['h']
           row['level'] = tmpValue['d']
@@ -99,7 +108,8 @@ def handler(event, context):
           tmpValue = value['hhad']
           row = dict()
           row['matchId'] = matchId
-          row['isRqspf'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
+          # row['isRqspf'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
+          row['isRqspf'] = tmpValue['p_status']
           row['isLetSingle'] = tmpValue['single']
           row['letCount'] = tmpValue['fixedodds']
           row['letWin'] = tmpValue['h']
@@ -117,7 +127,8 @@ def handler(event, context):
           tmpValue = value['crs']
           row = dict()
           row['matchId'] = matchId
-          row['isBf'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
+          # row['isBf'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
+          row['isBf'] = tmpValue['p_status']
           row['zeroToZero'] = tmpValue['0000']
           row['zeroToOne'] = tmpValue['0001']
           row['zeroToTwo'] = tmpValue['0002']
@@ -161,7 +172,8 @@ def handler(event, context):
           tmpValue = value['hafu']
           row = dict()
           row['matchId'] = matchId
-          row['isBqc'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
+          # row['isBqc'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
+          row['isBqc'] = tmpValue['p_status']
           row['winWin'] = tmpValue['hh']
           row['winLevel'] = tmpValue['hd']
           row['winLose'] = tmpValue['ha']
@@ -183,7 +195,8 @@ def handler(event, context):
           tmpValue = value['ttg']
           row = dict()
           row['matchId'] = matchId
-          row['isZjq'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
+          # row['isZjq'] = tmpValue['p_status'] if tmpValue['allup'] != '0' else ''
+          row['isZjq'] = tmpValue['p_status']
           row['zero'] = tmpValue['s0']
           row['one'] = tmpValue['s1']
           row['two'] = tmpValue['s2']
