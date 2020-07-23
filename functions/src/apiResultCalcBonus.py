@@ -1,12 +1,87 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import logging
 import json
 import db
-import datetime
-from math import floor
+from itertools import combinations
+from decimal import *
+from utils import *
 
+D = Decimal
 logger = logging.getLogger()
+
+mxnOptions = {
+  'single': [1],
+  '2x1': [2],
+  '2x3': [1, 2],
+  '3x1': [3],
+  '3x3': [2],
+  '3x4': [2, 3],
+  '3x6': [1, 2],
+  '3x7': [1, 2, 3],
+  '4x1': [4],
+  '4x4': [3],
+  '4x5': [3, 4],
+  '4x6': [2],
+  '4x10': [1, 2],
+  '4x11': [2, 3, 4],
+  '4x14': [1, 2, 3],
+  '4x15': [1, 2, 3, 4],
+  '5x1': [5],
+  '5x5': [4],
+  '5x6': [5, 6],
+  '5x10': [2],
+  '5x15': [1, 2],
+  '5x16': [3, 4, 5],
+  '5x20': [2, 3],
+  '5x25': [1, 2, 3],
+  '5x26': [2, 3, 4, 5],
+  '5x30': [1, 2, 3, 4],
+  '5x31': [1, 2, 3, 4, 5],
+  '6x1': [6],
+  '6x6': [5],
+  '6x7': [5, 6],
+  '6x15': [2],
+  '6x20': [3],
+  '6x21': [1, 2],
+  '6x22': [4, 5, 6],
+  '6x35': [2, 3],
+  '6x41': [1, 2, 3],
+  '6x42': [3, 4, 5, 6],
+  '6x50': [2, 3, 4],
+  '6x56': [1, 2, 3, 4],
+  '6x57': [2, 3, 4, 5, 6],
+  '6x62': [1, 2, 3, 4, 5],
+  '6x63': [1, 2, 3, 4, 5, 6],
+  '7x1': [7],
+  '7x7': [6],
+  '7x8': [6, 7],
+  '7x21': [5],
+  '7x35': [4],
+  '7x120': [2, 3, 4, 5, 6, 7],
+  '7x127': [1, 2, 3, 4, 5, 6, 7],
+  '8x1': [8],
+  '8x8': [7],
+  '8x9': [7, 8],
+  '8x28': [6],
+  '8x56': [5],
+  '8x70': [4],
+  '8x247': [2, 3, 4, 5, 6, 7, 8],
+  '8x255': [1, 2, 3, 4, 5, 6, 7, 8]
+}
+
+maxBonus = {
+  1: D(100000),
+  2: D(200000),
+  3: D(200000),
+  4: D(500000),
+  5: D(500000),
+  6: D(1000000),
+  7: D(1000000),
+  8: D(1000000)
+}
+
 
 def handler(environ, start_response):
   try:
@@ -20,9 +95,20 @@ def handler(environ, start_response):
     return http400(start_response)
   
   bettingTime = params.get('bettingTime')
+  options = params.get('options')
+  betting = params.get('betting')
+  multiple = params.get('multiple')
+  realOptions = []
+  for option in options:
+    if (mxnOptions.get(option)):
+      realOptions += mxnOptions.get(option)
+    else:
+      return http400(start_response)
+  logger.info('realOptions: {}'.format(realOptions))
+
   matchNumbers = []
-  for betting in params.get('betting'):
-    matchNumbers.append(betting.get('matchNumber'))
+  for matchBetting in betting:
+    matchNumbers.append(matchBetting.get('matchNumber'))
   
   conn = db.getConnection()
 
@@ -32,7 +118,6 @@ def handler(environ, start_response):
     matchIds = []
     matchInfoById = dict()
     matchInfoByNumber = dict()
-    bettingById = dict()
     resultById = dict()
     oddsById = dict()
     
@@ -71,68 +156,82 @@ def handler(environ, start_response):
         resp['status'] = 100
         resp['message'] = 'The following matches are not finished: ' + ', '.join(map(lambda x: matchInfoById.get(x).get('number'), matchIds))
         return http200(start_response, resp)
-      
+
       logger.info('resultById: {}'.format(resultById))
     
-    for matchId in resultById.keys():
-      oddsById[matchId] = getOdds(matchId, resultById[matchId], bettingTime)
+    # 猜中比赛的赔率，计算奖金只需要这些
+    odds = []
+    for matchBetting in betting:
+      matchId = matchInfoByNumber.get(matchBetting.get('matchNumber')).get('matchId')
+      resultSet = set(matchBetting.get('bettingItems')) & set(resultById.get(matchId))
+      if resultSet:
+        odds.append(getOdds(matchId, resultSet.pop(), bettingTime))
 
-    logger.info('oddsById: {}'.format(oddsById))
+    logger.info('odds: {}'.format(odds))
+
+    # 终于开始算奖了，注意，算钱的时候一定要用 Decimal，除非都是整数
+    totalBonus = D(0)
+    for o in realOptions:
+      if len(odds) < o:
+        continue
+      for c in combinations(odds, o):
+        bonus = D(2)
+        for v in c:
+          bonus *= D(v)
+        bonus = roundBonus(bonus)
+        totalBonus += min(bonus, maxBonus.get(o))
+
+    totalBonus *= D(multiple)
 
     resp = dict()
     resp['status'] = 0
-    resp['bonus'] = 0
+    resp['bonus'] = str(totalBonus)
 
     return http200(start_response, resp)
 
   except Exception as e:
     logger.error(e)
+    logger.error(sys.exc_info()[2])
     return http500(start_response)
   finally:
     logger.info('finally')
     conn.close()
 
-def getOdds(matchId, result, saleTime):
+def getOdds(matchId, item, saleTime):
   conn = db.getConnection()
   try:
-    sql = """WITH
-      spf AS (SELECT `win`,`level`,`lose` FROM `spfodds` WHERE `matchId` = {matchId} AND `releaseTime` < {saleTime} ORDER BY `releaseTime` DESC LIMIT 1),
-      rqspf AS (SELECT `letWin`,`letLevel`,`letLose` FROM `rqspfodds` WHERE `matchId` = {matchId} AND `releaseTime` < {saleTime} ORDER BY `releaseTime` DESC LIMIT 1),
-      bf AS (SELECT `zeroToZero`,`zeroToOne`,`zeroToTwo`,`zeroToThree`,`zeroToFour`,`zeroToFive`,`oneToZero`,`oneToOne`,`oneToTwo`,`oneToThree`,`oneToFour`,`oneToFive`,`twoToZero`,`twoToOne`,`twoToTwo`,`twoToThree`,`twoToFour`,`twoToFive`,`threeToZero`,`threeToOne`,`threeToTwo`,`threeToThree`,`fourToZero`,`fourToOne`,`fourToTwo`,`fiveToZero`,`fiveToOne`,`fiveToTwo`,`winOther`,`levelOther`,`loseOther` FROM `bfodds` WHERE `matchId` = {matchId} AND `releaseTime` < {saleTime} ORDER BY `releaseTime` DESC LIMIT 1),
-      bqc AS (SELECT `winWin`,`winLevel`,`winLose`,`levelWin`,`levelLevel`,`levelLose`,`loseWin`,`loseLevel`,`loseLose` FROM `bqcodds` WHERE `matchId` = {matchId} AND `releaseTime` < {saleTime} ORDER BY `releaseTime` DESC LIMIT 1),
-      zjq AS (SELECT `zero`,`one`,`two`,`three`,`four`,`five`,`six`,`seven` FROM `zjqodds` WHERE `matchId` = {matchId} AND `releaseTime` < {saleTime} ORDER BY `releaseTime` DESC LIMIT 1)
-      SELECT * FROM spf, rqspf, bf, bqc, zjq
-    """.format(matchId=matchId, saleTime=saleTime)
+    if item in ('win','level','lose'):
+      sql = "SELECT `{item}` FROM `spfodds` WHERE `matchId` = {matchId} AND `releaseTime` < {saleTime} ORDER BY `releaseTime` DESC LIMIT 1"
+    elif item in ('letWin','letLevel','letLose'):
+      sql = "SELECT `{item}` FROM `rqspfodds` WHERE `matchId` = {matchId} AND `releaseTime` < {saleTime} ORDER BY `releaseTime` DESC LIMIT 1"
+    elif item in ('zeroToZero','zeroToOne','zeroToTwo','zeroToThree','zeroToFour','zeroToFive','oneToZero','oneToOne','oneToTwo','oneToThree','oneToFour','oneToFive','twoToZero','twoToOne','twoToTwo','twoToThree','twoToFour','twoToFive','threeToZero','threeToOne','threeToTwo','threeToThree','fourToZero','fourToOne','fourToTwo','fiveToZero','fiveToOne','fiveToTwo','winOther','levelOther','loseOther'):
+      sql = "SELECT `{item}` FROM `bfodds` WHERE `matchId` = {matchId} AND `releaseTime` < {saleTime} ORDER BY `releaseTime` DESC LIMIT 1"
+    elif item in ('winWin','winLevel','winLose','levelWin','levelLevel','levelLose','loseWin','loseLevel','loseLose'):
+      sql = "SELECT `{item}` FROM `bqcodds` WHERE `matchId` = {matchId} AND `releaseTime` < {saleTime} ORDER BY `releaseTime` DESC LIMIT 1"
+    elif item in ('zero','one','two','three','four','five','six','seven'):
+      sql = "SELECT `{item}` FROM `zjqodds` WHERE `matchId` = {matchId} AND `releaseTime` < {saleTime} ORDER BY `releaseTime` DESC LIMIT 1"
+    
+    sql = sql.format(item=item, matchId=matchId, saleTime=saleTime)
 
     with conn.cursor() as cursor:
       # 查询赛事基本信息
-      logger.info('sql: {}'.format(sql))
       cursor.execute(sql)
       dbResult = cursor.fetchone()
-      logger.info('odds of {}: {}'.format(matchId, dbResult))
-      odds = dict()
-      for k in result:
-        odds[k] = float(dbResult.get(k, 0))
-      return odds
+      return dbResult.get(item)
   except Exception as e:
     logger.error(e)
+    logger.error(sys.exc_info()[2])
   finally:
     conn.close()
 
-def http400(start_response):
-  status = '400 Bad Request'
-  response_headers = []
-  start_response(status, response_headers)
-  return []
-
-def http500(start_response):
-  status = '500 Server Error1'
-  response_headers = []
-  start_response(status, response_headers)
-  return []
-
-def http200(start_response, data):
-  status = '200 OK'
-  response_headers = [('Content-type', 'application/json')]
-  start_response(status, response_headers)
-  return [json.dumps(data).encode()]
+def roundBonus(bonus):
+  [m,n] = str(bonus).split('.')
+  if len(n) > 2:
+    if int(n[2]) < 5:
+      return D('{}.{}'.format(m, n[0:2]))
+    elif int(n[2]) == '5':
+      if len(n) < 4 or int(n[3]) % 2 == 0:
+        return D('{}.{}'.format(m, n[0:2]))
+    return D('{}.{}'.format(m, n[0:2])) + D('0.01')
+  else:
+    return bonus
