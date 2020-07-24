@@ -47,7 +47,7 @@
                             </div>
                             <div class="layui-col-xs10">
                                 <table class="layui-table" :class="isSingle(index, index2)">
-                                    <tr>
+                                    <tr v-show="race.isSpf == 'Selling'">
                                         <td :class="{'layui-bg-red' : race.winCheck == true}"
                                             @click="chooseScore(index, index2, 'win')" v-show="race.win">
                                             胜{{ race.win }}
@@ -68,7 +68,21 @@
                                             <span class="check-score-num layui-bg-red" :class="{'layui-hide': !race.otherNum}">{{ race.otherNum }}</span>
                                         </td>
                                     </tr>
-                                    <tr>
+                                    <tr v-show="race.isSpf != 'Selling'">
+                                        <td colspan="3" style="border-top: 1px solid #c5c5c5;border-top-left-radius: 10px;">
+                                            已停售
+                                        </td>
+                                        <td class="more" rowspan="2" @click="showHideMore(index, index2)" style="border-top: 1px solid #c5c5c5;border-top-right-radius: 10px;border-bottom-right-radius: 10px;">
+                                            更多<br>选项
+                                            <span class="check-score-num layui-bg-red" :class="{'layui-hide': !race.otherNum}">{{ race.otherNum }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr v-show="race.isRqspf != 'Selling'">
+                                        <td colspan="3" style="border-left: 1px solid #c5c5c5;border-bottom-left-radius: 10px;">
+                                            已停售
+                                        </td>
+                                    </tr>
+                                    <tr v-show="race.isRqspf == 'Selling'">
                                         <td :class="{'layui-bg-red' : race.letWinCheck == true}"
                                             @click="chooseScore(index, index2, 'letWin')" v-show="race.letWin">
                                             胜{{ race.letWin }}
@@ -312,50 +326,56 @@
                     <tr>
                         <td class="layui-bg layui-bg-gray">0</td>
                         <td :class="{'layui-bg-red' : moreData.winChoose == true}"
-                            @click="chooseScoreMoreS('winChoose')" v-show="moreData.win">
+                            @click="chooseScoreMoreS('winChoose')" v-show="moreData.win && moreData.isSpf == 'Selling'">
                             <span>胜</span>
                             <span>{{ moreData.win }}</span>
                         </td>
                         <td :class="{'layui-bg-red' : moreData.levelChoose == true}"
-                            @click="chooseScoreMoreS('levelChoose')" v-show="moreData.win">
+                            @click="chooseScoreMoreS('levelChoose')" v-show="moreData.win && moreData.isSpf == 'Selling'">
                             <span>平</span>
                             <span>{{ moreData.level }}</span>
                         </td>
                         <td :class="{'layui-bg-red' : moreData.loseChoose == true}"
-                            @click="chooseScoreMoreS('loseChoose')" v-show="moreData.win">
+                            @click="chooseScoreMoreS('loseChoose')" v-show="moreData.win && moreData.isSpf == 'Selling'" style="border-top-right-radius: 10px;">
                             <span>负</span>
                             <span>{{ moreData.lose }}</span>
                         </td>
-                        <td colspan="3" v-show="!moreData.win">
+                        <td colspan="3" v-show="!moreData.win" style="border-top-right-radius: 10px;">
                             未开售
+                        </td>
+                        <td colspan="3" v-show="moreData.isSpf != 'Selling'" style="border-top-right-radius: 10px;">
+                            已停售
                         </td>
                     </tr>
                     <tr>
                         <td class="layui-bg layui-bg-blue">{{ moreData.letCount }}</td>
                         <td :class="{'layui-bg-red' : moreData.letWinChoose == true}"
-                            @click="chooseScoreMoreS('letWinChoose')" v-show="moreData.letWin">
+                            @click="chooseScoreMoreS('letWinChoose')" v-show="moreData.letWin && moreData.isRqspf == 'Selling'">
                             <span>胜</span>
                             <span>{{ moreData.letWin }}</span>
                         </td>
                         <td :class="{'layui-bg-red' : moreData.letLevelChoose == true}"
-                            @click="chooseScoreMoreS('letLevelChoose')" v-show="moreData.letWin">
+                            @click="chooseScoreMoreS('letLevelChoose')" v-show="moreData.letWin && moreData.isRqspf == 'Selling'">
                             <span>平</span>
                             <span>{{ moreData.letLevel }}</span>
                         </td>
                         <td :class="{'layui-bg-red' : moreData.letLoseChoose == true}"
-                            @click="chooseScoreMoreS('letLoseChoose')" v-show="moreData.letWin">
+                            @click="chooseScoreMoreS('letLoseChoose')" v-show="moreData.letWin && moreData.isRqspf == 'Selling'" style="border-bottom-right-radius: 10px;">
                             <span>负</span>
                             <span>{{ moreData.letLose }}</span>
                         </td>
-                        <td colspan="3" v-show="!moreData.letWin">
+                        <td colspan="3" v-show="!moreData.letWin" style="border-bottom-right-radius: 10px;">
                             未开售
+                        </td>
+                        <td colspan="3" v-show="moreData.isRqspf != 'Selling'" style="border-bottom-right-radius: 10px;">
+                            已停售
                         </td>
                     </tr>
                 </table>
             </div>
             <div class="wan">
                 <div class="wan-title"><span class="layui-bg-red">单</span>比分</div>
-                <table class="layui-table">
+                <table class="layui-table" v-show="moreData.isBf == 'Selling'">
                     <tr>
                         <td rowspan="3" class="layui-bg layui-bg-red">主胜</td>
                         <td :class="{'layui-bg-red' : moreDataChooseTem.oneToZeroChoose == true}"
@@ -429,7 +449,7 @@
                         </td>
                     </tr>
                 </table>
-                <table class="layui-table">
+                <table class="layui-table" v-show="moreData.isBf == 'Selling'">
                     <tr>
                         <td rowspan="3" class="layui-bg layui-bg-green">平</td>
                         <td :class="{'layui-bg-red' : moreDataChooseTem.zeroToZeroChoose == true}"
@@ -459,7 +479,7 @@
                         </td>
                     </tr>
                 </table>
-                <table class="layui-table">
+                <table class="layui-table" v-show="moreData.isBf == 'Selling'">
                     <tr>
                         <td rowspan="3" class="layui-bg layui-bg-blue">主负</td>
                         <td :class="{'layui-bg-red' : moreDataChooseTem.zeroToOneChoose == true}"
@@ -533,10 +553,15 @@
                         </td>
                     </tr>
                 </table>
+                <table class="layui-table" v-show="moreData.isBf != 'Selling'">
+                    <tr>
+                        <td style="padding: 10px 0;">已停售</td>
+                    </tr>
+                </table>
             </div>
             <div class="wan">
                 <div class="wan-title"><span class="layui-bg-red">单</span>进球数</div>
-                <table class="layui-table">
+                <table class="layui-table" v-show="moreData.isZjq == 'Selling'">
                     <tr>
                         <td rowspan="2" class="layui-bg layui-bg-red">进球数</td>
                         <td :class="{'layui-bg-red' : moreDataChooseTem.zeroChoose == true}"
@@ -583,10 +608,15 @@
                         </td>
                     </tr>
                 </table>
+                <table class="layui-table" v-show="moreData.isZjq != 'Selling'">
+                    <tr>
+                        <td style="padding: 10px 0;">已停售</td>
+                    </tr>
+                </table>
             </div>
             <div class="wan">
                 <div class="wan-title"><span class="layui-bg-red">单</span>半全场</div>
-                <table class="layui-table">
+                <table class="layui-table" v-show="moreData.isBqc == 'Selling'">
                     <tr>
                         <td rowspan="3" class="layui-bg layui-bg-blue">半全场</td>
                         <td :class="{'layui-bg-red' : moreDataChooseTem.winWinChoose == true}"
@@ -638,6 +668,11 @@
                             <span>负-负</span>
                             <span>{{ moreData.loseLose }}</span>
                         </td>
+                    </tr>
+                </table>
+                <table class="layui-table" v-show="moreData.isBqc != 'Selling'">
+                    <tr>
+                        <td style="padding: 10px 0;">已停售</td>
                     </tr>
                 </table>
             </div>
@@ -2261,5 +2296,4 @@
 </script>
 </body>
 <script type="text/javascript" src="https://s4.cnzz.com/z_stat.php?id=1279071000&web_id=1279071000"></script>
-
 </html>
