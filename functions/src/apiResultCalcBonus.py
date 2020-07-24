@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import sys
+import traceback
 import logging
 import json
 import db
@@ -98,13 +98,9 @@ def handler(environ, start_response):
   options = params.get('options')
   betting = params.get('betting')
   multiple = params.get('multiple')
-  realOptions = []
   for option in options:
-    if (mxnOptions.get(option)):
-      realOptions += mxnOptions.get(option)
-    else:
+    if not option in mxnOptions.keys():
       return http400(start_response)
-  logger.info('realOptions: {}'.format(realOptions))
 
   matchNumbers = []
   for matchBetting in betting:
@@ -166,20 +162,28 @@ def handler(environ, start_response):
       resultSet = set(matchBetting.get('bettingItems')) & set(resultById.get(matchId))
       if resultSet:
         odds.append(getOdds(matchId, resultSet.pop(), bettingTime))
+      else:
+        odds.append("0")
 
     logger.info('odds: {}'.format(odds))
 
     # 终于开始算奖了，注意，算钱的时候一定要用 Decimal，除非都是整数
     totalBonus = D(0)
-    for o in realOptions:
-      if len(odds) < o:
-        continue
-      for c in combinations(odds, o):
-        bonus = D(2)
-        for v in c:
-          bonus *= D(v)
-        bonus = roundBonus(bonus)
-        totalBonus += min(bonus, maxBonus.get(o))
+    for option in options:
+      if option == 'single':
+        for o in odds:
+          totalBonus += D(2) * D(o)
+      else:
+        m = int(option.split('x')[0])
+        ns = mxnOptions.get(option)
+        for comb0 in combinations(odds, m):
+          for n in ns:
+            for comb1 in combinations(comb0, n):
+              bonus = D(2)
+              for v in comb1:
+                bonus *= D(v)
+              bonus = roundBonus(bonus)
+              totalBonus += min(bonus, maxBonus.get(n))
 
     totalBonus *= D(multiple)
 
@@ -190,8 +194,7 @@ def handler(environ, start_response):
     return http200(start_response, resp)
 
   except Exception as e:
-    logger.error(e)
-    logger.error(sys.exc_info()[2])
+    logger.error(traceback.format_exc())
     return http500(start_response)
   finally:
     logger.info('finally')
@@ -219,8 +222,7 @@ def getOdds(matchId, item, saleTime):
       dbResult = cursor.fetchone()
       return dbResult.get(item)
   except Exception as e:
-    logger.error(e)
-    logger.error(sys.exc_info()[2])
+    logger.error(traceback.format_exc())
   finally:
     conn.close()
 
