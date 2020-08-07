@@ -189,7 +189,7 @@ def handler(environ, start_response):
 
     resp = dict()
     resp['status'] = 0
-    resp['bonus'] = str(totalBonus)
+    resp['bonus'] = format(totalBonus, '.2f')
 
     return http200(start_response, resp)
 
@@ -227,7 +227,10 @@ def getOdds(matchId, item, saleTime):
     conn.close()
 
 def roundBonus(bonus):
-  [m,n] = str(bonus).split('.')
+  if bonus == D(0):
+    return bonus
+
+  [m,n] = format(bonus, '.4f').split('.')
   if len(n) > 2:
     if int(n[2]) < 5:
       return D('{}.{}'.format(m, n[0:2]))
