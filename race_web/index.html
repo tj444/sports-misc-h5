@@ -915,6 +915,7 @@
                     'loseLose',
                 ],
             ],
+            playName: ['胜平负','让球胜平负','比分','进球数','半全场'],
         },
         filters: {
             formatTime: function (value) {
@@ -1178,6 +1179,8 @@
 
                 // 调用计算多少注(存储)， 调用计算多少钱，奖金
                 this.countZhu()
+
+                this.chooseResultShow && this._isSingle();
 
                 this.moreShow = !this.moreShow
                 this.greyBgShow = !this.greyBgShow
@@ -1495,11 +1498,32 @@
                     this.chooseDuoGuan = []
                 }
 
+                // 串关的上限
+                let playGuan = [8,8,4,6,6];
+                let maxGuan = this.chooseRaceNum;
+                for (let data of this.chooseRace)
+                {
+                    for ( let index in this.play )
+                    {
+
+                        for ( let index2 in this.play[ index ] )
+                        {
+                            if( data[ this.play[ index ][ index2 ] + 'Choose' ] == true )
+                            {
+                                if( playGuan[ index ] < maxGuan )
+                                {
+                                    maxGuan = playGuan[ index ];
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if( this.chooseRaceNum > 1 )
                 {
-                    for (let i = 2; i <= this.chooseRaceNum; i++)
+                    for (let i = 2; i <= maxGuan; i++)
                     {
-                        if( i == this.chooseRaceNum )
+                        if( i == maxGuan )
                         {
                             freeGuan.push({name:i + '串1', value:i + 'X1', 'choose':true})
                             this.guanWord = i + '串1'
@@ -1517,7 +1541,7 @@
                 {
                     let duoGuan = []
 
-                    let chuanGuan = this.chuanGuan.slice(0, this.chooseRaceNum - 2)
+                    let chuanGuan = this.chuanGuan.slice(0, maxGuan - 2)
 
                     if( chuanGuan.length > 0 )
                     {
@@ -2017,7 +2041,6 @@
             copyResult() {
                 let copyContent = ''
                 let jinqiu = ['0','1','2','3','4','5','6','7+']
-                let playName = ['胜平负','让球胜平负','比分','进球数','半全场']
 
                 let playIndex, samePlay = 1;
 
@@ -2071,7 +2094,7 @@
                     copyContent += race.join('+') + '\n'
                 }
 
-                copyContent = '竞彩足球' + ( samePlay == 1 ? playName[ playIndex ] : '混合过关' ) + '\n' + copyContent;
+                copyContent = '竞彩足球' + ( samePlay == 1 ? this.playName[ playIndex ] : '混合过关' ) + '\n' + copyContent;
 
                 copyContent += this.guanWord + '\n' + this.bei + '倍';
 
