@@ -21,6 +21,7 @@ DROP TABLE IF EXISTS matchinfo; CREATE TABLE matchinfo (
     `matchStatus` varchar(10),
     `half` varchar(5),
     `final` varchar(5),
+    `500fid` int,
     `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) default charset utf8mb4;
