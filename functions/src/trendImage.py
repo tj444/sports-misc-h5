@@ -57,7 +57,7 @@ def handler(environ, start_response):
     FROM rqspfodds JOIN matchinfo ON matchinfo.matchId = rqspfodds.matchId
     WHERE isLetSingle = '1' AND (matchinfo.matchStatus IN ('Final', 'Close') OR matchinfo.matchStatus IS NULL) AND saleStopTime > %s
     )
-    SELECT * FROM tmptable ORDER BY matchId ASC, releaseTime DESC;
+    SELECT * FROM tmptable ORDER BY saleStopTime ASC, releaseTime DESC;
     """
     with conn.cursor() as cursor:
       cursor.execute(sql, (day90startTime, day90startTime))

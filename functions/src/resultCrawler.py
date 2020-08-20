@@ -8,6 +8,8 @@ import datetime
 import matchDetailCrawler
 from math import floor
 
+CRAWLER_LOG_TYPE = 'get_fb_match_result'
+
 logger = logging.getLogger()
 
 def handler(event, context):
@@ -76,7 +78,7 @@ def crawl(date):
           final = value['final']
 
           # 仅当抓取到的状态与库中状态不一致时更新
-          if matchInfoMap[matchId] and matchInfoMap[matchId]['matchStatus'] != matchStatus:
+          if matchInfoMap.get(matchId) and matchInfoMap[matchId]['matchStatus'] != matchStatus:
             matchDetailCrawler.crawl(matchId)
             with conn.cursor() as cursor:
               sql = 'UPDATE `matchinfo` SET matchStatus = %s, half = %s, final = %s WHERE matchId = %s'
@@ -84,12 +86,12 @@ def crawl(date):
               cursor.execute(sql, (matchStatus, half, final, matchId))
 
               # 如果赛事已开奖，但赛事比分状态仍然不是已结束，则去更新赛事的比分状态
-              if matchStatus == 'Final' and (not matchStatusMap[matchId] or matchStatusMap[matchId]['matchStatus'] != 'Played'):
+              if matchStatus == 'Final' and (not matchStatusMap.get(matchId) or matchStatusMap[matchId]['matchStatus'] != 'Played'):
                 updateMatchStatusToPlayed(matchId, final, half, int(float(value['fixedodds'])), conn)
 
     # 保存本次抓取日志
     with conn.cursor() as cursor:
-      cursor.execute('INSERT INTO `crawlerlog` (`date`, `sha256`, `content`) VALUES (%s, %s, %s)', (date, sha256, resultText))
+      cursor.execute('INSERT INTO `crawlerlog` (`date`, `type`, `sha256`, `content`) VALUES (%s, %s, %s, %s)', (date, CRAWLER_LOG_TYPE, sha256, resultText))
     conn.commit()
 
     return 'Done!'
