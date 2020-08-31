@@ -114,6 +114,7 @@ def handler(environ, start_response):
     matchIds = []
     matchInfoById = dict()
     matchInfoByNumber = dict()
+    refundIds = []
     resultById = dict()
     oddsById = dict()
     
@@ -147,6 +148,14 @@ def handler(environ, start_response):
         resultById[ms.get('matchId')] = ms.get('result').split(',')
         matchIds.remove(ms.get('matchId'))
 
+      if matchIds:
+        cursor.execute('SELECT `matchId` FROM `matchstatus` WHERE `matchId` IN %(matchIds)s AND `matchStatus` = "Refund"', {'matchIds': matchIds})
+        matchRefund = cursor.fetchall()
+        logger.info('matchRefund: {}'.format(matchRefund))
+        for mr in matchRefund:
+          refundIds.append(mr.get('matchId'))
+          matchIds.remove(mr.get('matchId'))
+
       if len(matchIds) > 0:
         resp = dict()
         resp['status'] = 100
@@ -159,6 +168,11 @@ def handler(environ, start_response):
     odds = []
     for matchBetting in betting:
       matchId = matchInfoByNumber.get(matchBetting.get('matchNumber')).get('matchId')
+      if matchId in refundIds:
+        for b in matchBetting.get('bettingItems'):
+          odds.append("1")
+        continue
+
       resultSet = set(matchBetting.get('bettingItems')) & set(resultById.get(matchId))
       if resultSet:
         odds.append(getOdds(matchId, resultSet.pop(), bettingTime))

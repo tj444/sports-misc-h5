@@ -44,15 +44,10 @@ def crawl(date):
 
     result = json.loads(resultText)
     matchIds = list(map(lambda x: x['id'], result['data']['result']))
+    updated = False
 
     # 赛事数据没有更新的话直接结束
     with conn.cursor() as cursor:
-      cursor.execute('SELECT `id` FROM `crawlerlog` WHERE `date` = %s AND `sha256` = %s', (date, sha256))
-      dbResult = cursor.fetchone()
-      if dbResult != None:
-        logger.info('No updated data')
-        return 'Done'
-
       cursor.execute('SELECT * FROM `matchinfo` WHERE `matchId` IN %s', ([matchIds]))
       dbResult = cursor.fetchall()
       if dbResult:
@@ -79,6 +74,7 @@ def crawl(date):
 
           # 仅当抓取到的状态与库中状态不一致时更新
           if matchInfoMap.get(matchId) and matchInfoMap[matchId]['matchStatus'] != matchStatus:
+            updated = True
             matchDetailCrawler.crawl(matchId)
             with conn.cursor() as cursor:
               sql = 'UPDATE `matchinfo` SET matchStatus = %s, half = %s, final = %s WHERE matchId = %s'
@@ -86,13 +82,14 @@ def crawl(date):
               cursor.execute(sql, (matchStatus, half, final, matchId))
 
               # 如果赛事已开奖，但赛事比分状态仍然不是已结束，则去更新赛事的比分状态
-              if matchStatus == 'Final' and (not matchStatusMap.get(matchId) or matchStatusMap[matchId]['matchStatus'] != 'Played'):
-                updateMatchStatusToPlayed(matchId, final, half, int(float(value['fixedodds'])), conn)
+              if matchStatus in ('Final', 'Define') and not (matchStatusMap.get(matchId) and matchStatusMap[matchId]['matchStatus'] in ('Played', 'Refund')):
+                updateMatchStatusToPlayed(matchId, final, half, value['fixedodds'], conn)
 
-    # 保存本次抓取日志
-    with conn.cursor() as cursor:
-      cursor.execute('INSERT INTO `crawlerlog` (`date`, `type`, `sha256`, `content`) VALUES (%s, %s, %s, %s)', (date, CRAWLER_LOG_TYPE, sha256, resultText))
-    conn.commit()
+    if updated:
+      # 保存本次抓取日志
+      with conn.cursor() as cursor:
+        cursor.execute('INSERT INTO `crawlerlog` (`date`, `type`, `sha256`, `content`) VALUES (%s, %s, %s, %s)', (date, CRAWLER_LOG_TYPE, sha256, resultText))
+      conn.commit()
 
     return 'Done!'
   except Exception as e:
@@ -102,17 +99,25 @@ def crawl(date):
 
 def updateMatchStatusToPlayed(matchId, final, half, letCount, conn):
   row = dict()
-  row['matchId'] = matchId
-  row['matchStatus'] = 'Played'
-  finalScores = final.split(':')
-  row['hostFinalScore'] = int(finalScores[0])
-  row['visitingFinalScore'] = int(finalScores[1])
-  halfScores = half.split(':')
-  row['hostHalfScore'] = int(halfScores[0])
-  row['visitingHalfScore'] = int(halfScores[1])
-  row['letCount'] = letCount
-  row['result'] = ','.join(calcResult(row))
-  row.pop('letCount')
+  if final in ('无效场次', '取消'):
+    row['matchId'] = matchId
+    row['matchStatus'] = 'Refund'
+    row['hostFinalScore'] = 0
+    row['visitingFinalScore'] = 0
+    row['hostHalfScore'] = 0
+    row['visitingHalfScore'] = 0
+  else:
+    row['matchId'] = matchId
+    row['matchStatus'] = 'Played'
+    finalScores = final.split(':')
+    row['hostFinalScore'] = int(finalScores[0])
+    row['visitingFinalScore'] = int(finalScores[1])
+    halfScores = half.split(':')
+    row['hostHalfScore'] = int(halfScores[0])
+    row['visitingHalfScore'] = int(halfScores[1])
+    row['letCount'] = int(float(letCount))
+    row['result'] = ','.join(calcResult(row))
+    row.pop('letCount')
 
   with conn.cursor() as cursor:
     fieldsStr = ', '.join(map(lambda x: '`' + x + '`', row.keys()))
