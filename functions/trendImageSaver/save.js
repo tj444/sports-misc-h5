@@ -20,6 +20,20 @@ module.exports.handler = (event, context, callback) => {
     });
 };
 
+module.exports.httpHandler = (request, response, context) => {
+  const url = 'http://api.tc.jiedaimarket.cn/trendImage';
+
+  screenshot(url, context)
+    .then(outputFile => {
+      response.setStatusCode(200);
+      response.setHeader('content-type', 'image/jpeg');
+      response.send(fs.readFileSync(outputFile));
+    })
+    .catch(err => {
+      callback(err, 'fail');
+    });
+};
+
 // Get screenshot method
 async function screenshot(url, context) {
   // Open a new browser viewport

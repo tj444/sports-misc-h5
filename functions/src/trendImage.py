@@ -184,7 +184,7 @@ def preProcessData(matchData):
       matchInfo['levelOdds'] = float(row['level'])
       matchInfo['loseOdds'] = float(row['lose'])
 
-      if (row['final']):
+      if row['final'] and ':' in row['final']:
         finalScores = row['final'].split(':')
         hostFinalScore = int(finalScores[0])
         visitingFinalScore = int(finalScores[1])
