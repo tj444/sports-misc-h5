@@ -225,8 +225,10 @@ POST /result/calcOrderHighestBonus
 #### 参数：
 ```
 {
+  "bettingTime": 1594910200000,         // 投注时间
   "tickets": [
     {
+      "id": 123,
       "betting": [                         // 投注信息
         {
           "matchNumber":"周四001",         // 赛事编号
@@ -238,11 +240,10 @@ POST /result/calcOrderHighestBonus
         }
       ],
       "options": ["single", "2x1"],        // 玩法
-      "multiple": 1,                       // 倍数
-      "bettingTime": 1594910200000         // 投注时间
+      "multiple": 1                        // 倍数
     },
     ...
-	]
+  ]
 }
 ```
 
@@ -250,6 +251,11 @@ POST /result/calcOrderHighestBonus
 ```
 {
   "status": 0,                         // 状态码，值为 0 时表示成功
-  "bonus": "102.4",                    // 计算得出的奖金
+  "result": [
+    {
+      "id": 123,
+      "highestBonus": "102.4"
+    }
+  ]
 }
 ```
