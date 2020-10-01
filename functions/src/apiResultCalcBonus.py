@@ -30,7 +30,7 @@ mxnOptions = {
   '4x15': [1, 2, 3, 4],
   '5x1': [5],
   '5x5': [4],
-  '5x6': [5, 6],
+  '5x6': [4, 5],
   '5x10': [2],
   '5x15': [1, 2],
   '5x16': [3, 4, 5],
@@ -116,7 +116,6 @@ def handler(environ, start_response):
     matchInfoByNumber = dict()
     refundIds = []
     resultById = dict()
-    oddsById = dict()
     
     # 根据 matchNumber 查询赛事，查询范围为自投注时间起 4 天内
     with conn.cursor() as cursor:
