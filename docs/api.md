@@ -225,7 +225,6 @@ POST /result/calcOrderHighestBonus
 #### 参数：
 ```
 {
-  "bettingTime": 1594910200000,         // 投注时间
   "tickets": [
     {
       "id": 123,
@@ -240,7 +239,8 @@ POST /result/calcOrderHighestBonus
         }
       ],
       "options": ["single", "2x1"],        // 玩法
-      "multiple": 1                        // 倍数
+      "multiple": 1,                       // 倍数
+      "bettingTime": 1594910200000         // 投注时间
     },
     ...
   ]
