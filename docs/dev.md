@@ -5,12 +5,14 @@
 2. 复制 `template.example.yml` 为 `template.yml`，将其中所有纯大写字母的变量替换为实际值
 
 ## 文件说明：
+```
 ├── create_table.sql // 数据库建表语句
 ├── functions  // 函数计算源码
 │   ├── src  // python 函数的源码
 │   └── trendImageSaver  // 走势图保存函数的源码，nodejs
 ├── template.example.yml  // 函数计算配置文件模板
-└── trends_web
+└── trends_web  // 趋势图页面
+```
 
 ## 函数说明：
  * crawler:  sporttery.cn 官方数据抓取函数
